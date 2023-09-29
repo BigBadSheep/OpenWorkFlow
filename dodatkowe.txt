@@ -6,6 +6,9 @@ create table transactions (id integer primary key autoincrement, currency varcha
 user jtq
 password nMk 
 
+ala2@ala2
+ala2
+
 .\env\Scripts\Activate.ps1
 
 $env:FLASK_DEBUG = "1" 

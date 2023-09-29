@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html> 
+    <head>
+        <title> edit-user </title>
+        <meta charset="="utf-8">
+    </head>
+    <body>
+        <h1> edycja użytkownika {{ user.name }}</h1>
+        <form id="user_form" action="{{ url_for('edit_user', user_name=user.name) }}" method="POST">
+            <label> email </label><input type="text" id="email" name="email" value="{{user.email}}"> <br>
+            <label> password</label><input type="password" id="user_pass" name="user_pass"> <br> <p> zostawienie pustego pola spowoduje pozostwaienie obecnego hasła </p>
+            <input type="submit"  value="Send"> <br>
+        </form>
+</body>
