@@ -1,0 +1,4 @@
+create table users (id integer primary key autoincrement, name varchar(100) not null unique, email varchar(100) not null unique, password test, is_active 
+booolen not null default 0, is_admin boolean not null default 0);
+
+create table transactions (id integer primary key autoincrement, currency varchar (5), amount int, user varchar(30), trans_date not null default(date()));
