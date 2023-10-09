@@ -1,34 +1,109 @@
-{% for message in get_flashed_messages() %}
-<div> <p style="color:red">  {{message }} </p> </div>
-{%endfor%}
-<div >
- <table >
- <thead>
- <tr>
- <th >#</th>
- <th >User name</th>
- <th >Email</th>
- <th >Is active</th>
- <th >Is admin</th>
- <th >Actions</th>
- </tr>
- </thead>
- <tbody>
- {% for user in users %}
- <tr>
- <th scope="row">{{ user.id }}</th>
- <td>{{ user.name }}</td>
- <td>{{ user.email }}</td>
- <td> </td>
- <td> </td>
- <td>
- <a href="{{ url_for('edit_user', user_name=user.name) }}"
-  role="button">Edit...</a>
-  <a href="{{ url_for('delete_user', user_name=user.name) }}" role="button">Delate user</a>
- 
- </td>
- </tr>
- {%endfor%}
- </tbody>
- </table>
-</div>
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Users</title>
+    <meta charset="utf-8">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome dla ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e2e0e0;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            background-color: #5a9c65;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        table {
+            background-color: #fff;
+            margin: 20px auto;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        th {
+            background-color: #5a9c65;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        td {
+            border-bottom: 1px solid #ccc;
+        }
+
+        a {
+            color: #5a9c65;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+
+        a:hover {
+            color: #406b46;
+        }
+
+        .fa-user,
+        .fa-lock,
+        .fa-sign-in-alt {
+            margin-right: 10px;
+        }
+
+        p {
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+            margin: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Users</h1>
+    {% for message in get_flashed_messages() %}
+    <div><p style="color:red">{{ message }}</p></div>
+    {% endfor %}
+    <div>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>User name</th>
+                    <th>Email</th>
+                    <th>Is active</th>
+                    <th>Is admin</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <th scope="row">{{ user.id }}</th>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td></td>
+                    <td></td>
+                    <td>
+                        <a href="{{ url_for('edit_user', user_name=user.name) }}" role="button">Edit...</a>
+                        <a href="{{ url_for('delete_user', user_name=user.name) }}" role="button">Delete user</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+
+</html>

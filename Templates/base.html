@@ -1,14 +1,45 @@
 <!DOCTYPE html>
-<html> 
-    <head>
-        <title> main </title>
-        <meta charset="="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-    </head>
-    <body>
-        {% for message in get_flashed_messages() %}
-        <div> <p style="color:red">  {{message }} </p> </div>
-        {%endfor%}
-        <h1> hello word </h1>
-    </body>
+<html>
+
+<head>
+    <title>Main</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome dla ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e2e0e0;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            background-color: #5a9c65;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        div {
+            text-align: center;
+        }
+
+        p {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    {% for message in get_flashed_messages() %}
+    <div>
+        <p>{{ message }}</p>
+    </div>
+    {% endfor %}
+    <h1>Hello World</h1>
+</body>
+
 </html>
