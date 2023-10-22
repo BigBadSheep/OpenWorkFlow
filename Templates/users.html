@@ -19,8 +19,24 @@
  <th scope="row">{{ user.id }}</th>
  <td>{{ user.name }}</td>
  <td>{{ user.email }}</td>
- <td> </td>
- <td> </td>
+ <td> <a href="{{ url_for('user_status_change', action='active', user_name=user.name) }}">
+    {% if user.is_active %}
+       tak
+    {% else %}
+       nie
+    {% endif %}
+</a>
+</td>
+ <td> 
+    <a href="{{ url_for('user_status_change', action='admin', user_name=user.name) }}">
+        {% if user.is_admin %}
+           tak
+        {% else %}
+           nie
+        {% endif %}
+    </a>
+
+ </td>
  <td>
  <a href="{{ url_for('edit_user', user_name=user.name) }}"
   role="button">Edit...</a>

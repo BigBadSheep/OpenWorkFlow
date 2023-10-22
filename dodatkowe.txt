@@ -3,8 +3,27 @@ booolen not null default 0, is_admin boolean not null default 0);
 
 create table transactions (id integer primary key autoincrement, currency varchar (5), amount int, user varchar(30), trans_date not null default(date()));
 
-user jtq
-password nMk 
+create table users (
+    id serial primary key,
+    name varchar(100) not null unique,
+    email varchar(100) not null unique,
+    password varchar(100) not null,
+    is_active boolean not null default false,
+    is_admin boolean not null default false
+);
+
+create table transactions (
+    id serial primary key,
+    currency varchar(5),
+    amount int,
+    user_id integer references users(id),
+    trans_date timestamp not null default current_timestamp
+);
+
+CREATE USER WorkFlow WITH PASSWORD 'password';
+
+user cqk 
+password trf  
 
 ala2@ala2
 ala2
