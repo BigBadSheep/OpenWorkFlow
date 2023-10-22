@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, g, redirect, url_for, flash, session
 import psycopg2
 from datetime import date
-
+from psycopg2.extras import DictCursor
 import os
 import hashlib
 import binascii
@@ -129,6 +129,7 @@ class UserPass:
         
 @app.route('/users')
 def users():
+
     db = get_db()
     sql_command = 'select id, name, email, is_admin, is_active from users;'
     cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -137,27 +138,51 @@ def users():
     return render_template('users.html', active_menu='users', users=users)
 
 @app.route('/user_status_change/<action>/<user_name>')
+
 def user_status_change(action, user_name):
 
     if not 'user' in session:
         return redirect(url_for('login'))
     login = session['user']
-    
+    flash(f'user name {user_name} login {login}')
     db = get_db()
 
     if action == 'active':
-        db.execute("""update users set is_active = (is_active + 1) % 2 
-                      where name = ? and name <> ?""",
-                      [user_name, login])
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        #tatus_sql='select is_active from users where name='aaa';'
+        cur.execute("update users set is_active = ((is_active::int + 1) %% 2)::boolean where name = %s and name <> %s ", (user_name, login))       
         db.commit()
     elif action == 'admin':
-        db.execute("""update users set is_admin = (is_admin + 1) % 2 
-                      where name = ? and name <> ?""",
-                      [user_name, login])
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute("update users set is_admin = ((is_admin::int + 1) %% 2)::boolean where name = %s and name <> %s", (user_name, login))
         db.commit()
 
     return redirect(url_for('users'))
 
+
+"""
+@app.route('/user_status_change/<action>/<user_name>')
+
+def user_status_change(action, user_name):
+
+    if not 'user' in session:
+        return redirect(url_for('login'))
+    login = session['user']
+    flash(f'user name {user_name} login {login}')
+    db = get_db()
+
+    if action == 'active':
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        #tatus_sql='select is_active from users where name='aaa';'
+        cur.execute("update users set is_active = ((is_active::int + 1) % 2)::boolean where name = %s and name <> %s", (user_name, login))       
+        db.commit()
+    elif action == 'admin':
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute(update users set is_admin = ((is_admin::int + 1) % 2)::boolean where name = 'aaa' and name <> 'bbb)
+        db.commit()
+
+    return redirect(url_for('users'))
+"""
 @app.route('/edit_user/<user_name>', methods=['GET', 'POST'])
 def edit_user(user_name):
 
@@ -223,12 +248,12 @@ def new_user():
         user['email'] = '' if not 'email' in request.form else request.form['email']
         user['user_pass'] = '' if not 'user_pass' in request.form else request.form['user_pass']
         cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor = cur.execute('select count(*) as cnt from users where name = %s',[user['user_name']])
-        record = cursor.fetchone()
+        cur.execute('select count(*) as cnt from users where name = %s',[user['user_name']])
+        record = cur.fetchone()
         is_user_name_unique = (record['cnt'] == 0)
 
-        cursor = cur.execute('select count(*) as cnt from users where email = %s', [user['email']])
-        record = cursor.fetchone()
+        cur.execute('select count(*) as cnt from users where email = %s',[user['email']])
+        record = cur.fetchone()
         is_user_email_unique = (record['cnt'] == 0)
     
         if user['user_name'] == '':
