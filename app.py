@@ -60,8 +60,11 @@ def init_app():
 @app.route('/login', methods=['GET','POST'])
 def login():
 
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+
     if request.method == 'GET':
-        return render_template('login.html', active_menu='login')
+        return render_template('login.html', active_menu='login', login=login)
     else:
         user_name = '' if 'user_name' not in request.form else request.form['user_name']
         user_pass = '' if 'user_pass' not in request.form else request.form['user_pass']
@@ -89,6 +92,9 @@ class UserPass:
     def __init__(self, user='', password=''):
         self.user = user
         self.password = password
+        self.email = ''
+        self.is_valid = False
+        self.is_active = False
 
     def hash_password(self):
         # Hash a password for storing.
@@ -125,66 +131,88 @@ class UserPass:
         else:
             self.user = None
             self.password = None
-            return None 
+            return None
+        
+    def get_user_info(self):
+        db = get_db()
+        sql_statement = 'select name, email, is_active, is_admin from users where name=%s'
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute(sql_statement, [self.user])
+        db_user = cur.fetchone()
+
+        if db_user == None:
+            self.is_valid = False
+            self.is_admin = False
+            self.email = ''
+        elif db_user['is_active']!=1:
+            self.is_valid = False
+            self.is_admin = False
+            self.email = db_user['email']
+        else:
+            self.is_valid = True
+            self.is_admin = db_user['is_admin']
+            self.email = db_user['email']       
         
 @app.route('/users')
 def users():
+    # Check if user is logged in and is an admin
+    #login = UserPass(session.get('user'))
+    #login.get_user_info()
+    #if not login.is_valid or not login.is_admin:
+    #    flash(f'Użytkownik {login.user} nie jest adminem')
+    #    return redirect(url_for('login'))
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid:
+        flash(f'Użytkownik {login.user} nie aktywny')
+        return redirect(url_for('login'))
+
 
     db = get_db()
     sql_command = 'select id, name, email, is_admin, is_active from users;'
     cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute(sql_command)
     users=cur.fetchall()
-    return render_template('users.html', active_menu='users', users=users)
+
+    return render_template('users.html', active_menu='users', users=users, login=login)
 
 @app.route('/user_status_change/<action>/<user_name>')
-
 def user_status_change(action, user_name):
 
-    if not 'user' in session:
+    # app.py – code to add to functions – admin access
+
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
         return redirect(url_for('login'))
-    login = session['user']
-    flash(f'user name {user_name} login {login}')
+
+    #if not 'user' in session:
+    #    return redirect(url_for('login'))
+    #login = session['user']
+    #flash(f'user name {user_name} login {login}')
     db = get_db()
 
     if action == 'active':
         cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
         #tatus_sql='select is_active from users where name='aaa';'
-        cur.execute("update users set is_active = ((is_active::int + 1) %% 2)::boolean where name = %s and name <> %s ", (user_name, login))       
+        cur.execute("update users set is_active = ((is_active::int + 1) %% 2)::boolean where name = %s and name <> %s ", (user_name, login.user))       
         db.commit()
     elif action == 'admin':
         cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cur.execute("update users set is_admin = ((is_admin::int + 1) %% 2)::boolean where name = %s and name <> %s", (user_name, login))
+        cur.execute("update users set is_admin = ((is_admin::int + 1) %% 2)::boolean where name = %s and name <> %s", (user_name, login.user))
         db.commit()
 
     return redirect(url_for('users'))
 
-
-"""
-@app.route('/user_status_change/<action>/<user_name>')
-
-def user_status_change(action, user_name):
-
-    if not 'user' in session:
-        return redirect(url_for('login'))
-    login = session['user']
-    flash(f'user name {user_name} login {login}')
-    db = get_db()
-
-    if action == 'active':
-        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        #tatus_sql='select is_active from users where name='aaa';'
-        cur.execute("update users set is_active = ((is_active::int + 1) % 2)::boolean where name = %s and name <> %s", (user_name, login))       
-        db.commit()
-    elif action == 'admin':
-        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cur.execute(update users set is_admin = ((is_admin::int + 1) % 2)::boolean where name = 'aaa' and name <> 'bbb)
-        db.commit()
-
-    return redirect(url_for('users'))
-"""
 @app.route('/edit_user/<user_name>', methods=['GET', 'POST'])
 def edit_user(user_name):
+
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
+        return redirect(url_for('login'))    
 
     db = get_db()
     cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -197,7 +225,7 @@ def edit_user(user_name):
         return redirect(url_for('users'))
 
     if request.method == 'GET':
-        return render_template('edit_user.html', active_menu='users', user=user)
+        return render_template('edit_user.html', active_menu='users', user=user, login=login)
     else:
         new_email = '' if 'email' not in request.form else request.form["email"]
         new_password = '' if 'user_pass' not in request.form else request.form['user_pass']
@@ -220,21 +248,31 @@ def edit_user(user_name):
 @app.route('/user_delete/<user_name>')
 def delete_user(user_name):
     
-    if not 'user' in session:
-        return redirect(url_for('login'))
-    login = session['user']
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
+        return redirect(url_for('login'))   
+
+    #if not 'user' in session:
+    #    return redirect(url_for('login'))
+    #login = session['user']
 
     db=get_db()
     cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
     sql_statement = "delete from users where name = %s and name <> %s"
-    cur.execute(sql_statement, [user_name, login])
+    cur.execute(sql_statement, [user_name, login.user])
     db.commit()
     return redirect(url_for('users'))
 
 @app.route('/new_user', methods=['GET', 'POST'])
 def new_user():
-    if not 'user' in session:
-        return redirect(url_for('login'))
+    
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
+        return redirect(url_for('login'))   
 
     login = session['user']
     db = get_db()
@@ -242,7 +280,7 @@ def new_user():
     user = {}
 
     if request.method == 'GET':
-        return render_template('new_user.html', active_menu='users', user=user)
+        return render_template('new_user.html', active_menu='users', user=user, login=login)
     else:
         user['user_name'] = '' if not 'user_name' in request.form else request.form['user_name']
         user['email'] = '' if not 'email' in request.form else request.form['email']
@@ -277,7 +315,7 @@ def new_user():
             return redirect(url_for('users'))
         else:
             flash('Correct error: {}'.format(message))
-            return render_template('new_user.html', active_menu='users', user=user)
+            return render_template('new_user.html', active_menu='users', user=user, login=login)
 
 @app.route('/')
 def index():
