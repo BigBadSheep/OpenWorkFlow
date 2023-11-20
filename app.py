@@ -18,7 +18,7 @@ app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
 def get_db():
     if not hasattr(g, 'db'):
-        dbname = 'OpenWorkFlow'
+        dbname = 'test_workflow'
         user = 'postgres'
         password = 'a'
         host = 'localhost'
@@ -48,11 +48,11 @@ def init_app():
     # if not - create/update admin account with a new password and admin privileges, display
     user_pass = UserPass()
     user_pass.get_random_user_password()
-    name = user_pass.user[:100]  # truncate the name to 100 characters
+    username = user_pass.user[:100]  # truncate the name to 100 characters
     email = 'noone@nowhere.no'
     password = user_pass.hash_password()
-    sql_statement = "INSERT INTO users (name, email, password, is_active, is_admin) VALUES (%s, %s, %s, %s, %s)"
-    cur.execute(sql_statement, [name, email, password, True, True])
+    sql_statement = "INSERT INTO users (username, email, password, is_active, is_admin) VALUES (%s, %s, %s, %s, %s)"
+    cur.execute(sql_statement, [username, email, password, True, True])
     db.commit()
     flash('User {} with password {} has been created'.format(user_pass.user, user_pass.password))
     return redirect(url_for('index'))
@@ -122,7 +122,7 @@ class UserPass:
     
     def login_user(self):
         db = get_db()
-        sql_statement = 'select id, name, email, password, is_active, is_admin from users where name=%s'
+        sql_statement = 'select id_use, username, email, password, is_active, is_admin from users where username=%s'
         cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute(sql_statement, [self.user])
         user_record = cur.fetchone()
@@ -135,7 +135,7 @@ class UserPass:
         
     def get_user_info(self):
         db = get_db()
-        sql_statement = 'select name, email, is_active, is_admin from users where name=%s'
+        sql_statement = 'select username, email, is_active, is_admin from users where username=%s'
         cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute(sql_statement, [self.user])
         db_user = cur.fetchone()
@@ -169,7 +169,7 @@ def users():
 
 
     db = get_db()
-    sql_command = 'select id, name, email, is_admin, is_active from users;'
+    sql_command = 'select id_use, username, email, is_admin, is_active from users;'
     cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute(sql_command)
     users=cur.fetchall()
@@ -187,20 +187,16 @@ def user_status_change(action, user_name):
         flash(f'Użytkownik {login.user} nie jest adminem')
         return redirect(url_for('login'))
 
-    #if not 'user' in session:
-    #    return redirect(url_for('login'))
-    #login = session['user']
-    #flash(f'user name {user_name} login {login}')
     db = get_db()
 
     if action == 'active':
         cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
         #tatus_sql='select is_active from users where name='aaa';'
-        cur.execute("update users set is_active = ((is_active::int + 1) %% 2)::boolean where name = %s and name <> %s ", (user_name, login.user))       
+        cur.execute("update users set is_active = ((is_active::int + 1) %% 2)::boolean where username = %s and username <> %s ", (user_name, login.user))       
         db.commit()
     elif action == 'admin':
         cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cur.execute("update users set is_admin = ((is_admin::int + 1) %% 2)::boolean where name = %s and name <> %s", (user_name, login.user))
+        cur.execute("update users set is_admin = ((is_admin::int + 1) %% 2)::boolean where username = %s and username <> %s", (user_name, login.user))
         db.commit()
 
     return redirect(url_for('users'))
@@ -216,9 +212,8 @@ def edit_user(user_name):
 
     db = get_db()
     cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute('select name, email from users where name = %s', [user_name])
+    cur.execute('select username, email from users where username = %s', [user_name])
     user = cur.fetchone()
-    message = None
 
     if user == None:
         flash('No such user')
@@ -231,14 +226,14 @@ def edit_user(user_name):
         new_password = '' if 'user_pass' not in request.form else request.form['user_pass']
 
         if new_email != user['email']:
-            sql_statement = "update users set email = %s where name = %s"
+            sql_statement = "update users set email = %s where username = %s"
             cur.execute(sql_statement, [new_email, user_name])
             db.commit()
             flash('Email was changed')
 
         if new_password != '':
             user_pass = UserPass(user_name, new_password)
-            sql_statement = "update users set password = %s where name = %s"
+            sql_statement = "update users set password = %s where username = %s"
             cur.execute(sql_statement, [user_pass.hash_password(), user_name])
             db.commit()
             flash('Password was changed')
@@ -260,7 +255,7 @@ def delete_user(user_name):
 
     db=get_db()
     cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    sql_statement = "delete from users where name = %s and name <> %s"
+    sql_statement = "delete from users where username = %s and username <> %s"
     cur.execute(sql_statement, [user_name, login.user])
     db.commit()
     return redirect(url_for('users'))
@@ -286,7 +281,7 @@ def new_user():
         user['email'] = '' if not 'email' in request.form else request.form['email']
         user['user_pass'] = '' if not 'user_pass' in request.form else request.form['user_pass']
         cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cur.execute('select count(*) as cnt from users where name = %s',[user['user_name']])
+        cur.execute('select count(*) as cnt from users where username = %s',[user['user_name']])
         record = cur.fetchone()
         is_user_name_unique = (record['cnt'] == 0)
 
@@ -308,7 +303,7 @@ def new_user():
         if not message:
             user_pass = UserPass(user['user_name'], user['user_pass'])
             password_hash = user_pass.hash_password()
-            sql_statement = '''insert into users(name, email, password, is_active, is_admin) values(%s,%s,%s, True, False);'''
+            sql_statement = '''insert into users(username, email, password, is_active, is_admin) values(%s,%s,%s, True, False);'''
             cur.execute(sql_statement, [user['user_name'][:100], user['email'], password_hash])
             db.commit()
             flash('User {} created'.format(user['user_name']))
@@ -320,3 +315,48 @@ def new_user():
 @app.route('/')
 def index():
     return render_template('base.html')
+
+
+
+@app.route('/workflows', methods=['GET', 'POST'])
+def workflows():
+    #login = UserPass(session.get('user'))
+    #login.get_user_info()
+    #if not login.is_valid:
+    #    flash(f'Użytkownik {login.user} nie aktywny')
+    #    return redirect(url_for('login'))
+
+
+    db = get_db()
+    sql_command = 'SELECT f.id_flo, f.flowname, f.flowdescription, fl.filename AS file_name, f.number, f.status FROM flow f INNER JOIN files fl ON f.file_id = fl.id_fil;'
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(sql_command)
+    flows=cur.fetchall() 
+
+    return render_template('flows.html', active_menu='users', flows=flows, login=login)
+
+
+
+@app.route('/flow_info/<id_flo>', methods=['GET', 'POST'])
+def flow_info(id_flo):
+    #login = UserPass(session.get('user'))
+    #login.get_user_info()
+    #if not login.is_valid:
+     #   flash(f'Użytkownik {login.user} nie aktywny')
+     #   return redirect(url_for('login'))
+
+
+    db = get_db()
+    sql_command = 'SELECT f.id_flo, f.flowname, f.flowdescription, fl.filename AS file_name, f.number, f.status FROM flow f INNER JOIN files fl ON f.file_id = fl.id_fil;'
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(sql_command)
+    flows=cur.fetchall() 
+    
+    #sql_command2 = 'SELECT id_app, flow_id, group_id, value FROM approval_table;'
+    sql_command2 = 'SELECT id_app, flow_id, group_id, value FROM approval_table where flow_id=%s;'
+    
+    cur2 = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur2.execute(sql_command2,[id_flo])
+    approvals=cur2.fetchall() 
+
+    return render_template('flows_info.html', active_menu='users', flows=flows, login=login, approvals=approvals)
