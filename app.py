@@ -320,11 +320,11 @@ def index():
 
 @app.route('/workflows', methods=['GET', 'POST'])
 def workflows():
-    #login = UserPass(session.get('user'))
-    #login.get_user_info()
-    #if not login.is_valid:
-    #    flash(f'Użytkownik {login.user} nie aktywny')
-    #    return redirect(url_for('login'))
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid:
+        flash(f'Użytkownik {login.user} nie aktywny')
+        return redirect(url_for('login'))
 
 
     db = get_db()
@@ -339,11 +339,11 @@ def workflows():
 
 @app.route('/flow_info/<id_flo>', methods=['GET', 'POST'])
 def flow_info(id_flo):
-    #login = UserPass(session.get('user'))
-    #login.get_user_info()
-    #if not login.is_valid:
-     #   flash(f'Użytkownik {login.user} nie aktywny')
-     #   return redirect(url_for('login'))
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid:
+       flash(f'Użytkownik {login.user} nie aktywny')
+       return redirect(url_for('login'))
 
 
     db = get_db()
@@ -360,3 +360,163 @@ def flow_info(id_flo):
     approvals=cur2.fetchall() 
 
     return render_template('flows_info.html', active_menu='users', flows=flows, login=login, approvals=approvals)
+
+
+@app.route('/add_flow', methods=['GET', 'POST'])
+def add_flow():
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid:
+        flash(f'Użytkownik {login.user} nie aktywny')
+        return redirect(url_for('login'))
+
+    #login = session['user']
+    db = get_db()
+    message = None
+    flow = {}
+
+    if request.method == 'GET':
+        return render_template('new_flow.html', active_menu='new_flow', flow=flow, login=login)
+    else:
+        flow['flow_name'] = '' if not 'flow_name' in request.form else request.form['flow_name']
+        flow['flowdescription'] = '' if not 'flowdescription' in request.form else request.form['flowdescription']
+        flow['file_name'] = '' if not 'file_name' in request.form else request.form['file_name']
+        flow['file_path'] = '' if not 'file_path' in request.form else request.form['file_path']
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        #cur.execute('select count(*) as cnt from users where username = %s',[user['user_name']])
+        #record = cur.fetchone()
+        #is_user_name_unique = (record['cnt'] == 0)
+
+        #cur.execute('select count(*) as cnt from users where email = %s',[user['email']])
+        #record = cur.fetchone()
+        #is_user_email_unique = (record['cnt'] == 0)
+    
+        if flow['flow_name'] == '':
+            message = 'flow_name cannot be empty'
+        elif flow['flowdescription'] == '':
+            message = 'flowdescription cannot be empty'
+        elif flow['file_name'] == '':
+            message = 'file_name cannot be empty'
+        elif flow['file_path'] == '':
+            message = 'file_path cannot be empty'    
+        #elif not is_user_name_unique:
+        #    message = 'User with the name {} already exists'.format(user['user_name'])
+        #elif not is_user_email_unique:
+        #    message = 'User with the email {} alresdy exists'.format(user['email']) 
+    
+        if not message:
+            #user_pass = UserPass(user['user_name'], user['user_pass'])
+            #password_hash = user_pass.hash_password()
+            #INSERT INTO files (filename, filepath, uploder) VALUES ('new_file.txt', '/path/to/new_file.txt', 1);
+            sql_statement = '''INSERT INTO files (filename, filepath, uploder) VALUES(%s,%s,%s);'''
+            cur.execute(sql_statement, [ flow['file_name'], flow['file_path'], 1 ]) #jedne do zmiany na id usera
+            db.commit()
+            flash('Flow {} upolded'.format(flow['file_name']))
+
+            #INSERT INTO flow (flowname, flowdescription, file_id, number, status)
+            #VALUES ('New Flow', 'Description for New Flow', 1, 123, true);
+
+            sql_statement = '''INSERT INTO flow (flowname, flowdescription, file_id, number, status) VALUES(%s,%s,1, 0, false);'''
+            cur.execute(sql_statement, [ flow['flow_name'], flow['flowdescription'] ])    
+            db.commit()
+            flash('Flow {} created'.format(flow['flow_name']))
+
+            return redirect(url_for('workflows'))
+        else:
+            flash('Correct error: {}'.format(message))
+            return render_template('new_flow.html', active_menu='workflows', flow=flow, login=login)
+        
+@app.route('/groups', methods=['GET', 'POST'])
+def groups():
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid:
+       flash(f'Użytkownik {login.user} nie aktywny')
+       return redirect(url_for('login'))
+
+
+    db = get_db()
+    sql_command = 'SELECT * FROM groups;'
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(sql_command)
+    groups=cur.fetchall() 
+
+    return render_template('groups.html', active_menu='groups', login=login, groups=groups)
+
+@app.route('/groups/<id_grp>', methods=['GET', 'POST'])
+def grp_info(id_grp):
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid:
+       flash(f'Użytkownik {login.user} nie aktywny')
+       return redirect(url_for('login'))
+
+
+    db = get_db()
+    sql_command = 'SELECT * FROM groups;'
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(sql_command)
+    groups=cur.fetchall() 
+    
+    #sql_command2 = 'SELECT id_app, flow_id, group_id, value FROM approval_table;'
+    sql_command2 = 'SELECT g.groupname, u.username, u.email FROM group_members gm JOIN users u ON gm.user_id = u.id_use JOIN groups g ON gm.group_id = g.id_grp WHERE g.id_grp = %s ORDER BY g.groupname, u.username;'
+    
+    cur2 = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur2.execute(sql_command2,[id_grp])
+    members=cur2.fetchall() 
+
+    return render_template('groups_info.html', active_menu='groups', login=login, groups=groups, members=members)
+
+@app.route('/add_grp', methods=['GET', 'POST'])
+def add_grp():
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid:
+        flash(f'Użytkownik {login.user} nie aktywny')
+        return redirect(url_for('login'))
+
+    #login = session['user']
+    db = get_db()
+    message = None
+    grp = {}
+
+    if request.method == 'GET':
+        return render_template('new_grp.html', active_menu='new_grp', grp=grp, login=login)
+    else:
+        grp['group_name'] = '' if not 'group_name' in request.form else request.form['group_name']
+        grp['group_description'] = '' if not 'group_description' in request.form else request.form['group_description']
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        #cur.execute('select count(*) as cnt from users where username = %s',[user['user_name']])
+        #record = cur.fetchone()
+        #is_user_name_unique = (record['cnt'] == 0)
+
+        #cur.execute('select count(*) as cnt from users where email = %s',[user['email']])
+        #record = cur.fetchone()
+        #is_user_email_unique = (record['cnt'] == 0)
+    
+        if grp['group_name'] == '':
+            message = 'group_name cannot be empty'
+        elif grp['group_description'] == '':
+            message = 'group_description cannot be empty'    
+        #elif not is_user_name_unique:
+        #    message = 'User with the name {} already exists'.format(user['user_name'])
+        #elif not is_user_email_unique:
+        #    message = 'User with the email {} alresdy exists'.format(user['email']) 
+    
+        if not message:
+            #user_pass = UserPass(user['user_name'], user['user_pass'])
+            #password_hash = user_pass.hash_password()
+            #INSERT INTO files (filename, filepath, uploder) VALUES ('new_file.txt', '/path/to/new_file.txt', 1);
+            sql_statement = '''INSERT INTO groups ( groupname, groupdescription) VALUES(%s,%s);'''
+            cur.execute(sql_statement, [ grp['group_name'], grp['group_description'] ]) #jedne do zmiany na id usera
+            db.commit()
+            flash('Created {} group'.format(grp['group_name']))
+
+            #INSERT INTO flow (flowname, flowdescription, file_id, number, status)
+            #VALUES ('New Flow', 'Description for New Flow', 1, 123, true);
+
+
+            return redirect(url_for('groups'))
+        else:
+            flash('Correct error: {}'.format(message))
+            return render_template('new_flow.html', active_menu='groups', grp=grp, login=login)
