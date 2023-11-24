@@ -173,6 +173,10 @@ ala2
 
 .\env\Scripts\Activate.ps1
 
+
+.\venv\Scripts\Activate.ps1
+flask run
+
 $env:FLASK_DEBUG = "1" 
 
 flask run       
