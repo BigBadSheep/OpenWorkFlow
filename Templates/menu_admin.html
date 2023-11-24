@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Main Menu</title>
+    <title>Main Menu Admin</title>
     <meta charset="utf-8">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome dla ikon -->
@@ -10,9 +10,13 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #e2e0e0;
+            background-image: url('https://scontent-waw1-1.xx.fbcdn.net/v/t1.15752-9/393982217_378995091131028_1858520123515179774_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=8cd0a2&_nc_ohc=1IWNuqyCjZwAX_Sgvd1&_nc_ht=scontent-waw1-1.xx&oh=03_AdQhB4IhOqDqyKDKmPoVNTueJKlaRz3cFzVYEWWacB-Yvw&oe=65840444'); /* Dodaj ścieżkę do pliku graficznego */
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
             margin: 0;
             padding: 0;
+            height: 100vh; /* Dodano ustawienie wysokości na 100% wysokości okna przeglądarki */
         }
 
         h1 {
@@ -20,6 +24,63 @@
             color: #fff;
             padding: 20px;
             text-align: center;
+        }
+
+        #topbar {
+            background-color: #406b46;
+            color: #fff;
+            padding: 10px;
+            text-align: right;
+        }
+
+        #logoutBtn {
+            font-size: 18px;
+            cursor: pointer;
+            margin-right: 10px;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        #sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #406b46;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        #sidebar a {
+            padding: 15px 8px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #ffffff;
+            display: block;
+            transition: 0.3s;
+        }
+
+        #sidebar a:hover {
+            color: #5a9c65;
+        }
+
+        #sidebar .close-btn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 30px;
+            margin-left: 50px;
+            cursor: pointer;
+        }
+
+        #content {
+            transition: margin-left .5s;
+            padding: 16px;
+            margin-left: 0;
         }
 
         .container {
@@ -82,46 +143,93 @@
 
         /* Styl dla hiperłączy */
         a {
-            text-decoration: none; /* Usunięcie podkreślenia z hiperłączy */
-            color: inherit; /* Dziedziczenie koloru tekstu */
+            text-decoration: none;
+            color: inherit;
         }
 
         a:hover {
-            color: inherit; /* Dziedziczenie koloru tekstu po najechaniu myszką */
+            color: inherit;
+        }
+
+        #openBtn {
+            font-size: 30px;
+            cursor: pointer;
+            position: fixed;
+            top: 50%;
+            left: 0;
+            margin-top: -15px;
+            padding: 15px;
+            background-color: #406b46;
+            color: #ffffff;
+            z-index: 2;
+            transition: left 0.5s;
+        }
+        #userWelcome {
+            color: #303030;
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
         }
     </style>
 </head>
 
 <body>
-    <h1>Main Menu Admin</h1>
-    <div class="container">
-        <h2>Welcome,</h2>
-        <h2>{{ user.name }}</h2>
-        <div class="menu-tile">
-            <i class="fas fa-upload menu-icon"></i>
-            <span class="menu-text"><a href="#">Prześlij nowy dokument</a></span>
-        </div>
-        <div class="menu-tile">
-            <i class="fas fa-file menu-icon"></i>
-            <span class="menu-text"><a href="#">Twoje dokumenty</a></span>
-        </div>
-        <div class="menu-tile">
-            <i class="fas fa-bell menu-icon"></i>
-            <span class="menu-text"><a href="#">Zgłoszenia użytkowników</a></span>
-        </div>
-        <div class="menu-tile">
-            <i class="fas fa-user menu-icon"></i>
-            <span class="menu-text"><a href="#">Zarządzanie użytkownikami</a></span>
-        </div>
-        <div class="menu-tile">
-            <i class="fas fa-cog menu-icon"></i>
-            <span class="menu-text"><a href="#">Ustawienia</a></span>
-        </div>
-        <div class="menu-tile">
-            <i class="fas fa-sign-out-alt menu-icon"></i>
-            <span class="menu-text"><a href="#">Wyloguj</a></span>
-        </div>
+
+
+    <div id="sidebar">
+        <div class="close-btn" onclick="closeNav()">×</div>
+        <a href="rejestracja.html">Rejestracja użytkowników</a>
+        <a href="wysylanie_dokumentu_admin.html">Prześlij nowy dokument</a>
+        <a href="history.html">Twoje dokumenty</a>
+        <a href="lista_zgloszen.html">Zgłoszenia użytkowników</a>
+        <a href="edit_user.html">Zarządzanie użytkownikami</a>
+        <a href="settings_admin.html">Ustawienia</a>
     </div>
+
+    <div id="content">
+        <div id="openBtn" onclick="toggleNav()">☰</div>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div id="userWelcome">
+                Witaj, {{ user[1] }}
+            </div>
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('logout') }}">Wyloguj</a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Tutaj umieść resztę Twojego kodu -->
+    </div>
+
+    <script>
+        function toggleNav() {
+            var sidebar = document.getElementById("sidebar");
+            var content = document.getElementById("content");
+            var openBtn = document.getElementById("openBtn");
+
+            if (sidebar.style.width === "250px") {
+                closeNav();
+            } else {
+                openNav();
+            }
+        }
+
+        function openNav() {
+            document.getElementById("sidebar").style.width = "250px";
+            document.getElementById("content").style.marginLeft = "250px";
+            document.getElementById("openBtn").style.left = "250px";
+        }
+
+        function closeNav() {
+            document.getElementById("sidebar").style.width = "0";
+            document.getElementById("content").style.marginLeft = "0";
+            document.getElementById("openBtn").style.left = "0";
+        }
+    </script>
 </body>
 
 </html>
