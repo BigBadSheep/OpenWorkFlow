@@ -1,8 +1,5 @@
 from flask import Flask, render_template, request, g, redirect, url_for, flash, session
 import psycopg2
-from datetime import date
-from psycopg2.extras import DictCursor
-import os
 import hashlib
 import binascii
 import random
@@ -443,7 +440,7 @@ def groups():
 
     return render_template('groups.html', active_menu='groups', login=login, groups=groups)
 
-@app.route('/groups/<id_grp>', methods=['GET', 'POST'])
+@app.route('/groups/info/<id_grp>', methods=['GET', 'POST'])
 def grp_info(id_grp):
     login = UserPass(session.get('user'))
     login.get_user_info()
@@ -474,8 +471,7 @@ def add_grp():
     if not login.is_valid:
         flash(f'Użytkownik {login.user} nie aktywny')
         return redirect(url_for('login'))
-
-    #login = session['user']
+    
     db = get_db()
     message = None
     grp = {}
@@ -486,37 +482,20 @@ def add_grp():
         grp['group_name'] = '' if not 'group_name' in request.form else request.form['group_name']
         grp['group_description'] = '' if not 'group_description' in request.form else request.form['group_description']
         cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        #cur.execute('select count(*) as cnt from users where username = %s',[user['user_name']])
-        #record = cur.fetchone()
-        #is_user_name_unique = (record['cnt'] == 0)
-
-        #cur.execute('select count(*) as cnt from users where email = %s',[user['email']])
-        #record = cur.fetchone()
-        #is_user_email_unique = (record['cnt'] == 0)
     
         if grp['group_name'] == '':
             message = 'group_name cannot be empty'
         elif grp['group_description'] == '':
             message = 'group_description cannot be empty'    
-        #elif not is_user_name_unique:
-        #    message = 'User with the name {} already exists'.format(user['user_name'])
-        #elif not is_user_email_unique:
-        #    message = 'User with the email {} alresdy exists'.format(user['email']) 
     
         if not message:
-            #user_pass = UserPass(user['user_name'], user['user_pass'])
-            #password_hash = user_pass.hash_password()
-            #INSERT INTO files (filename, filepath, uploder) VALUES ('new_file.txt', '/path/to/new_file.txt', 1);
             sql_statement = '''INSERT INTO groups ( groupname, groupdescription) VALUES(%s,%s);'''
             cur.execute(sql_statement, [ grp['group_name'], grp['group_description'] ]) #jedne do zmiany na id usera
             db.commit()
             flash('Created {} group'.format(grp['group_name']))
-
-            #INSERT INTO flow (flowname, flowdescription, file_id, number, status)
-            #VALUES ('New Flow', 'Description for New Flow', 1, 123, true);
-
-
             return redirect(url_for('groups'))
+        
         else:
             flash('Correct error: {}'.format(message))
             return render_template('new_flow.html', active_menu='groups', grp=grp, login=login)
+        
