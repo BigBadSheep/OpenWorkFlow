@@ -311,7 +311,7 @@ def new_user():
 
 @app.route('/')
 def index():
-    return render_template('base.html')
+    return render_template('main.html')
 
 
 
