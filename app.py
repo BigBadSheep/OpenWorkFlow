@@ -544,14 +544,48 @@ def delete_group_member(id_gro):
         flash(f'Użytkownik {login.user} nie jest adminem')
         return redirect(url_for('login'))   
 
-    #if not 'user' in session:
-    #    return redirect(url_for('login'))
-    #login = session['user']
-
     db=get_db()
     cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
     sql_statement = "delete from group_members where id_gro = %s"
     cur.execute(sql_statement, [id_gro])
     db.commit()
     return redirect(url_for('groups'))
+
+@app.route('/add_group_flow/', methods=['GET', 'POST'])
+def add_group_flow():
+
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
+        return redirect(url_for('login'))    
+
+    db = get_db()
+    message = None
+    grop_add = {}
+
+    if request.method == 'GET':
+        return render_template('add_grp_flow.html', active_menu='add_grp_mem', grop_add=grop_add, login=login)
+    else: 
+        grop_add['flow_id'] = '' if not 'flow_id' in request.form else request.form['flow_id']
+        grop_add['group_id'] = '' if not 'group_id' in request.form else request.form['group_id']
+        grop_add['value'] = '' if not 'value' in request.form else request.form['value']
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    
+        if grop_add['flow_id'] == '':
+            message = 'flow is cannot be empty'  
+        elif grop_add['group_id'] == '':
+            message = 'group id cannot be empty'
+        elif grop_add['value'] == '':
+            message = 'value id cannot be empty'            
+    
+        if not message:
+            sql_statement = '''INSERT INTO approval_table ( flow_id, group_id, value) VALUES(%s,%s,%s);'''
+            cur.execute(sql_statement, [ grop_add['flow_id'], grop_add['group_id'], grop_add['value'] ]) 
+            db.commit()
+            flash('Add group {} to flow'.format(grop_add['group_id']))
+            return redirect(url_for('workflows'))
         
+        else:
+            flash('Correct error: {}'.format(message))
+            return render_template('add_grp_flow.html', active_menu='add_grp_mem', grop_add=grop_add, login=login)        
