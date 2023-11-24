@@ -1,6 +1,25 @@
 {% for message in get_flashed_messages() %}
 <div> <p style="color:red">  {{message }} </p> </div>
 {%endfor%}
+
+
+<head>
+      <title> users </title>
+      <meta charset="="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+      <style>
+         body {
+               background-color: #ABBAEA;
+         }
+         .child {
+               height: 200px;
+               margin: 20px;
+               border: 5px solid;
+               background-color: #FBD603;
+         }
+      </style>     
+</head>
+<body>
 <div >
  <table >
  <thead>
@@ -47,3 +66,4 @@
  </tbody>
  </table>
 </div>
+</body>
