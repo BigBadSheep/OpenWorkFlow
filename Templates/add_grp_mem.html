@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html> 
+    <head>
+        <title> new-flow </title>
+        <meta charset="="utf-8">
+    </head>
+    <body>
+        {% for message in get_flashed_messages() %}
+        <div> <p style="color:red">  {{message }} </p> </div>
+        {%endfor%}
+        <form id="grp_add_user" action="{{ url_for('add_group_member') }}" method="POST">
+            <label> user_id </label> <input type="text" id="user_id" name="user_id" >  <br>
+            <label> group_id </label> <input type="text" id="group_id" name="group_id" >  <br>
+            <input type="submit"  value="Send"> <br>
+        </form>
+</body>

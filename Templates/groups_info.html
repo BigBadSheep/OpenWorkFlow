@@ -20,7 +20,7 @@
     <a href="{{ url_for('grp_info', id_grp=group.id_grp )}}" role="button">More info</a> 
   </td>
   <td>
-    <a href="{{ url_for('grp_info', id_grp=group.id_grp )}}" role="button">Add member</a> 
+    <a href="{{ url_for('add_group_member', id_grp=group.id_grp )}}" role="button">Add member</a> 
   </td>
 
   </tr>
@@ -37,18 +37,18 @@
   <th >groupname</th>
   <th >user name</th>
   <th >email</th>
-  
+  <th> Action </th>
   </tr>
   </thead>
   <tbody>
   {% for member in members %}
   <tr>
-  <th scope="row">{{ member.id_grp }}</th>
+  <th scope="row">{{ member.id_gro }}</th>
   <td>{{ member.groupname }}</td>
   <td>{{ member.username }}</td>
   <td> {{ member.email }} </td>
   <td>
-    <a href="{{ url_for('grp_info', id_grp=member.id_grp )}}" role="button">Edit</a> 
+    <a href="{{ url_for('delete_group_member', id_gro=member.id_gro )}}" role="button">dell</a> 
     </td>
   </tr>
   {%endfor%}

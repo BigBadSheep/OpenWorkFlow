@@ -19,6 +19,9 @@
  <td>
    <a href="{{ url_for('grp_info', id_grp=group.id_grp )}}" role="button">More info</a> 
    </td>
+   <td>
+    <a href="{{ url_for('add_group_member', id_grp=group.id_grp )}}" role="button">Add member</a> 
+  </td>
  </tr>
  {%endfor%}
  </tbody>

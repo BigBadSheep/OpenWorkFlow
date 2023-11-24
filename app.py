@@ -456,7 +456,7 @@ def grp_info(id_grp):
     groups=cur.fetchall() 
     
     #sql_command2 = 'SELECT id_app, flow_id, group_id, value FROM approval_table;'
-    sql_command2 = 'SELECT g.groupname, u.username, u.email FROM group_members gm JOIN users u ON gm.user_id = u.id_use JOIN groups g ON gm.group_id = g.id_grp WHERE g.id_grp = %s ORDER BY g.groupname, u.username;'
+    sql_command2 = 'SELECT id_gro, g.groupname, u.username, u.email FROM group_members gm JOIN users u ON gm.user_id = u.id_use JOIN groups g ON gm.group_id = g.id_grp WHERE g.id_grp = %s ORDER BY g.groupname, u.username;'
     
     cur2 = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur2.execute(sql_command2,[id_grp])
@@ -497,5 +497,61 @@ def add_grp():
         
         else:
             flash('Correct error: {}'.format(message))
-            return render_template('new_flow.html', active_menu='groups', grp=grp, login=login)
+            return render_template('new_grp.html', active_menu='groups', grp=grp, login=login)
+        
+@app.route('/add_group_member/', methods=['GET', 'POST'])
+def add_group_member():
+
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
+        return redirect(url_for('login'))    
+
+    db = get_db()
+    message = None
+    mem = {}
+
+    if request.method == 'GET':
+        return render_template('add_grp_mem.html', active_menu='add_grp_mem', mem=mem, login=login)
+    else: 
+        mem['user_id'] = '' if not 'user_id' in request.form else request.form['user_id']
+        mem['group_id'] = '' if not 'group_id' in request.form else request.form['group_id']
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    
+        if mem['user_id'] == '':
+            message = 'user id cannot be empty'  
+        elif mem['group_id'] == '':
+            message = 'group id cannot be empty'     
+    
+        if not message:
+            sql_statement = '''INSERT INTO group_members ( user_id, group_id) VALUES(%s,%s);'''
+            cur.execute(sql_statement, [ mem['user_id'], mem['group_id'] ]) 
+            db.commit()
+            flash('Add user {} to group'.format(mem['user_id']))
+            return redirect(url_for('groups'))
+        
+        else:
+            flash('Correct error: {}'.format(message))
+            return render_template('add_grp_mem.html', active_menu='add_grp_mem', mem=mem, login=login)
+        
+@app.route('/delete_group_member/<id_gro>')
+def delete_group_member(id_gro):
+    
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
+        return redirect(url_for('login'))   
+
+    #if not 'user' in session:
+    #    return redirect(url_for('login'))
+    #login = session['user']
+
+    db=get_db()
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    sql_statement = "delete from group_members where id_gro = %s"
+    cur.execute(sql_statement, [id_gro])
+    db.commit()
+    return redirect(url_for('groups'))
         
