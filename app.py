@@ -316,47 +316,47 @@ def index():
 
 @app.route('/main')
 def main():
-    return render_template('main.html')
+    return render_template('base.html')
 
 @app.route('/admin_menu')
 def admin_menu():
-    return render_template('admin_menu.html')
+    return render_template('base.html')
 
 @app.route('/admin_bugs')
 def admin_bugs():
-    return render_template('admin_bugs.html')
+    return render_template('base.html')
 
 @app.route('/admin_docks')
 def admin_docks():
-    return render_template('admin_docks.html')
+    return render_template('base.html')
 
 @app.route('/admin_edit_user')
 def admin_edit_user():
-    return render_template('admin_edit_user.html')
+    return render_template('base.html')
 
 @app.route('/admin_settings')
 def admin_settings():
-    return render_template('admin_settings.html')
+    return render_template('base.html')
 
 @app.route('/admin_upload')
 def admin_upload():
-    return render_template('admin_upload.html')
+    return render_template('base.html')
 
 @app.route('/upload')
 def upload():
-    return render_template('upload.html')
+    return render_template('base.html')
 
 @app.route('/settings')
 def settings():
-    return render_template('settings.html')
+    return render_template('base.html')
 
 @app.route('/docks')
 def docks():
-    return render_template('docks.html')
+    return render_template('base.html')
 
 @app.route('/new_bugs')
 def new_bugs():
-    return render_template('new_bugs.html')
+    return render_template('base.html')
 
 
 

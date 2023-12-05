@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -153,16 +154,10 @@
 </head>
 
 <body>
-
-    <div id="sidebar">
-        <div class="close-btn" onclick="closeNav()">×</div>
-        <a href="{{ url_for('new_user') }}">Rejestracja użytkowników</a>
-        <a href="{{ url_for('admin_upload') }}">Prześlij nowy dokument</a>
-        <a href="{{ url_for('admin_docks') }}">Twoje dokumenty</a>
-        <a href="{{ url_for('admin_bugs') }}">Zgłoszenia użytkowników</a>
-        <a href="{{ url_for('users') }}" class="settings">Zarządzanie użytkownikami</a>
-        <a href="{{ url_for('admin_settings') }}">Ustawienia</a>
-    </div>
+    {% for message in get_flashed_messages() %}
+    <div> <p style="color:red">  {{message }} </p> </div>
+    {%endfor%}
+    <!-- usuniety sitebar-->
 
     <div id="content">
         <div id="openBtn" onclick="toggleNav()">☰</div>
@@ -212,31 +207,7 @@
         </div>
     </div>
 
-    <script>
-        function toggleNav() {
-            var sidebar = document.getElementById("sidebar");
-            var content = document.getElementById("content");
-            var openBtn = document.getElementById("openBtn");
-
-            if (sidebar.style.width === "250px") {
-                closeNav();
-            } else {
-                openNav();
-            }
-        }
-
-        function openNav() {
-            document.getElementById("sidebar").style.width = "250px";
-            document.getElementById("content").style.marginLeft = "250px";
-            document.getElementById("openBtn").style.left = "250px";
-        }
-
-        function closeNav() {
-            document.getElementById("sidebar").style.width = "0";
-            document.getElementById("content").style.marginLeft = "0";
-            document.getElementById("openBtn").style.left = "0";
-        }
-    </script>
+    <!-- usnięty skrypt-->
 </body>
 
 </html>

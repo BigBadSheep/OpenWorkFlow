@@ -1,102 +1,14 @@
-<!DOCTYPE html>
-<html lang="pl">
+{% for message in get_flashed_messages() %}
+<div> <p style="color:red">  {{message }} </p> </div>
+{%endfor%}
+<p> jest to formularz lgowania</p>
+ <form method="POST" action={{ url_for('login')}} > 
+ 
+ <label for="user_name">User name</label>
+ <input type="text" id="user_name" name="user_name">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logowanie</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-image: url('https://scontent-waw1-1.xx.fbcdn.net/v/t1.15752-9/393982217_378995091131028_1858520123515179774_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=8cd0a2&_nc_ohc=1IWNuqyCjZwAX_Sgvd1&_nc_ht=scontent-waw1-1.xx&oh=03_AdQhB4IhOqDqyKDKmPoVNTueJKlaRz3cFzVYEWWacB-Yvw&oe=65840444');
-            background-size: cover;
-            background-position: center center;
-            background-repeat: no-repeat;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-        }
+ <label for="user_pas">Password</label>
+ <input type="password" id="user_pass" name="user_pass">
+ <input type="submit" value="Login" class="btn btn-primary">
 
-        .main-content {
-            background-color: #fff;
-            max-width: 800px;
-            margin: 50px auto;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        h1 {
-            background-color: #5a9c65;
-            color: #fff;
-            padding: 20px;
-            text-align: center;
-            margin: 0 0 20px;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        input[type=text],
-        input[type=password] {
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #000;
-            border-radius: 5px;
-            background: #fff;
-        }
-
-        input[type=submit] {
-            background-color: #5a9c65;
-            padding: 10px 20px;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        input[type=submit]:hover {
-            background-color: #406b46;
-        }
-
-        .menu-button {
-            background-color: #5a9c65;
-            padding: 10px 20px;
-            color: #fff;
-            text-decoration: none;
-            border-radius: 5px;
-            margin-top: 20px;
-            text-align: center;
-            display: block;
-        }
-
-        .menu-button:hover {
-            background-color: #406b46;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="main-content">
-        <h1>Formularz logowania</h1>
-
-        <form method="POST" action="{{ url_for('users') }}">
-            <label for="user_name">Nazwa użytkownika</label>
-            <input type="text" id="user_name" name="user_name" required>
-
-            <label for="user_pass">Hasło</label>
-            <input type="password" id="user_pass" name="user_pass" required>
-
-            <input type="submit" value="Zaloguj się">
-        </form>
-
-        <a class="menu-button" href="{{ url_for('main') }}">Powrót do strony głównej</a>
-    </div>
-</body>
-
-</html>
+ </form>

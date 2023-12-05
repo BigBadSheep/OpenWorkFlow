@@ -94,13 +94,16 @@
 </head>
 
 <body>
+    {% for message in get_flashed_messages() %}
+    <div> <p style="color:red">  {{message }} </p> </div>
+    {%endfor%}
     <h1>Elektroniczny Obieg Dokumentów</h1>
     <div class="main-content">
         <h2>Zarządzaj dokumentami w prosty i wydajny sposób!</h2>
         <p>Zapraszamy na naszą stronę, gdzie znajdziesz nowoczesne rozwiązania do zarządzania dokumentacją w firmie.</p>
         <div class="buttons">
             <a href="{{ url_for('login') }}">Logowanie</a>
-            <a href="{{ url_for('register') }}">Rejestracja</a>
+            <!-- tu była rejestracja-->
         </div>
         <div class="icon-container">
             <!-- Ikonki -->
