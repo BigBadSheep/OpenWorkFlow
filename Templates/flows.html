@@ -1,0 +1,33 @@
+{% for message in get_flashed_messages() %}
+<div> <p style="color:red">  {{message }} </p> </div>
+{%endfor%}
+<div >
+ <table >
+ <thead>
+ <tr>
+ <th >#</th>
+ <th >Flowname</th>
+ <th >Flowdescription</th>
+ <th >File_name</th>
+ <th >Number</th>
+ <th >Status</th>
+ <th >Actions</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for flow in flows %}
+ <tr>
+ <th scope="row">{{ flow.id_flo }}</th>
+ <td>{{ flow.flowname }}</td>
+ <td>{{ flow.flowdescription }}</td>
+ <td> {{ flow.file_name }} </td>
+ <td> {{ flow.number }} </td>
+ <td> {{ flow.status }}  </td>
+ <td>
+   <a href="{{ url_for('flow_info', id_flo=flow.id_flo) }}" role="button">More info</a>
+   </td>
+ </tr>
+ {%endfor%}
+ </tbody>
+ </table>
+</div>

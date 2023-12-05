@@ -1,0 +1,58 @@
+{% for message in get_flashed_messages() %}
+<div> <p style="color:red">  {{message }} </p> </div>
+{%endfor%}
+<div >
+  <table >
+  <thead>
+  <tr>
+  <th >#</th>
+  <th >Group Name</th>
+  <th >Group Description</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for group in groups %}
+  <tr>
+  <th scope="row">{{ group.id_grp }}</th>
+  <td>{{ group.groupname }}</td>
+  <td>{{ group.groupdescription }}</td>
+  <td>
+    <a href="{{ url_for('grp_info', id_grp=group.id_grp )}}" role="button">More info</a> 
+  </td>
+  <td>
+    <a href="{{ url_for('add_group_member', id_grp=group.id_grp )}}" role="button">Add member</a> 
+  </td>
+
+  </tr>
+  {%endfor%}
+  </tbody>
+  </table>
+ </div>
+
+<br> <br>
+<table >
+  <thead>
+  <tr>
+  <th >#</th>
+  <th >groupname</th>
+  <th >user name</th>
+  <th >email</th>
+  <th> Action </th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for member in members %}
+  <tr>
+  <th scope="row">{{ member.id_gro }}</th>
+  <td>{{ member.groupname }}</td>
+  <td>{{ member.username }}</td>
+  <td> {{ member.email }} </td>
+  <td>
+    <a href="{{ url_for('delete_group_member', id_gro=member.id_gro )}}" role="button">dell</a> 
+    </td>
+  </tr>
+  {%endfor%}
+  </tbody>
+  </table>
+
+</div>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html> 
+    <head>
+        <title> new-flow </title>
+        <meta charset="="utf-8">
+    </head>
+    <body>
+        {% for message in get_flashed_messages() %}
+        <div> <p style="color:red">  {{message }} </p> </div>
+        {%endfor%}
+        <form id="flow_form" action="{{url_for('add_flow')}}" method="POST"> 
+            <label> flow name </label> <input type="text" id="flow_name" name="flow_name" >  <br>
+            <label> flowdescription </label><input type="text" id="flowdescription" name="flowdescription"> <br>
+            <label> file name</label><input type="text" id="file_name" name="file_name"> <br>
+            <label> file path</label><input type="text" id="file_path" name="file_path"> <br>
+            <input type="submit"  value="Send"> <br>
+        </form>
+</body>
