@@ -158,11 +158,11 @@ def users():
     #if not login.is_valid or not login.is_admin:
     #    flash(f'Użytkownik {login.user} nie jest adminem')
     #    return redirect(url_for('login'))
-    #login = UserPass(session.get('user'))
-    #login.get_user_info()
-    #if not login.is_valid:
-    #    flash(f'Użytkownik {login.user} nie aktywny')
-    #    return redirect(url_for('login'))
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid:
+        flash(f'Użytkownik {login.user} nie aktywny')
+        return redirect(url_for('login'))
 
 
     db = get_db()
@@ -201,7 +201,7 @@ def user_status_change(action, user_name):
 @app.route('/edit_user/<user_name>', methods=['GET', 'POST'])
 def edit_user(user_name):
 
-    login = UserPass(session.get('users'))
+    login = UserPass(session.get('user'))
     login.get_user_info()
     if not login.is_valid or not login.is_admin:
         flash(f'Użytkownik {login.user} nie jest adminem')
@@ -213,7 +213,7 @@ def edit_user(user_name):
     user = cur.fetchone()
 
     if user == None:
-        flash('No such users')
+        flash('No such user')
         return redirect(url_for('users'))
 
     if request.method == 'GET':
@@ -308,8 +308,6 @@ def new_user():
         else:
             flash('Correct error: {}'.format(message))
             return render_template('new_user.html', active_menu='users', user=user, login=login)
-
-
 
 @app.route('/')
 def index():
@@ -503,7 +501,7 @@ def grp_info(id_grp):
     groups=cur.fetchall() 
     
     #sql_command2 = 'SELECT id_app, flow_id, group_id, value FROM approval_table;'
-    sql_command2 = 'SELECT g.groupname, u.username, u.email FROM group_members gm JOIN users u ON gm.user_id = u.id_use JOIN groups g ON gm.group_id = g.id_grp WHERE g.id_grp = %s ORDER BY g.groupname, u.username;'
+    sql_command2 = 'SELECT id_gro, g.groupname, u.username, u.email FROM group_members gm JOIN users u ON gm.user_id = u.id_use JOIN groups g ON gm.group_id = g.id_grp WHERE g.id_grp = %s ORDER BY g.groupname, u.username;'
     
     cur2 = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur2.execute(sql_command2,[id_grp])
@@ -544,5 +542,95 @@ def add_grp():
         
         else:
             flash('Correct error: {}'.format(message))
-            return render_template('new_flow.html', active_menu='groups', grp=grp, login=login)
+            return render_template('new_grp.html', active_menu='groups', grp=grp, login=login)
         
+@app.route('/add_group_member/', methods=['GET', 'POST'])
+def add_group_member():
+
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
+        return redirect(url_for('login'))    
+
+    db = get_db()
+    message = None
+    mem = {}
+
+    if request.method == 'GET':
+        return render_template('add_grp_mem.html', active_menu='add_grp_mem', mem=mem, login=login)
+    else: 
+        mem['user_id'] = '' if not 'user_id' in request.form else request.form['user_id']
+        mem['group_id'] = '' if not 'group_id' in request.form else request.form['group_id']
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    
+        if mem['user_id'] == '':
+            message = 'user id cannot be empty'  
+        elif mem['group_id'] == '':
+            message = 'group id cannot be empty'     
+    
+        if not message:
+            sql_statement = '''INSERT INTO group_members ( user_id, group_id) VALUES(%s,%s);'''
+            cur.execute(sql_statement, [ mem['user_id'], mem['group_id'] ]) 
+            db.commit()
+            flash('Add user {} to group'.format(mem['user_id']))
+            return redirect(url_for('groups'))
+        
+        else:
+            flash('Correct error: {}'.format(message))
+            return render_template('add_grp_mem.html', active_menu='add_grp_mem', mem=mem, login=login)
+        
+@app.route('/delete_group_member/<id_gro>')
+def delete_group_member(id_gro):
+    
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
+        return redirect(url_for('login'))   
+
+    db=get_db()
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    sql_statement = "delete from group_members where id_gro = %s"
+    cur.execute(sql_statement, [id_gro])
+    db.commit()
+    return redirect(url_for('groups'))
+
+@app.route('/add_group_flow/', methods=['GET', 'POST'])
+def add_group_flow():
+
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
+        return redirect(url_for('login'))    
+
+    db = get_db()
+    message = None
+    grop_add = {}
+
+    if request.method == 'GET':
+        return render_template('add_grp_flow.html', active_menu='add_grp_mem', grop_add=grop_add, login=login)
+    else: 
+        grop_add['flow_id'] = '' if not 'flow_id' in request.form else request.form['flow_id']
+        grop_add['group_id'] = '' if not 'group_id' in request.form else request.form['group_id']
+        grop_add['value'] = '' if not 'value' in request.form else request.form['value']
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    
+        if grop_add['flow_id'] == '':
+            message = 'flow is cannot be empty'  
+        elif grop_add['group_id'] == '':
+            message = 'group id cannot be empty'
+        elif grop_add['value'] == '':
+            message = 'value id cannot be empty'            
+    
+        if not message:
+            sql_statement = '''INSERT INTO approval_table ( flow_id, group_id, value) VALUES(%s,%s,%s);'''
+            cur.execute(sql_statement, [ grop_add['flow_id'], grop_add['group_id'], grop_add['value'] ]) 
+            db.commit()
+            flash('Add group {} to flow'.format(grop_add['group_id']))
+            return redirect(url_for('workflows'))
+        
+        else:
+            flash('Correct error: {}'.format(message))
+            return render_template('add_grp_flow.html', active_menu='add_grp_mem', grop_add=grop_add, login=login)        

@@ -181,4 +181,6 @@ $env:FLASK_DEBUG = "1"
 
 flask run       
 
+
+ccc ddd
 wartoścowa dokumentacja https://www.psycopg.org/docs/usage.html
