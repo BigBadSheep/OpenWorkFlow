@@ -430,25 +430,38 @@ def add_flow():
     else:
         flow['flow_name'] = '' if not 'flow_name' in request.form else request.form['flow_name']
         flow['flowdescription'] = '' if not 'flowdescription' in request.form else request.form['flowdescription']
-        flow['file_name'] = '' if not 'file_name' in request.form else request.form['file_name']
-        flow['file_path'] = '' if not 'file_path' in request.form else request.form['file_path']
+        #flow['file_name'] = '' if not 'file_name' in request.form else request.form['file_name']
+        #flow['file_path'] = '' if not 'file_path' in request.form else request.form['file_path']
         cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
         #cur.execute('select count(*) as cnt from users where username = %s',[user['user_name']])
         #record = cur.fetchone()
         #is_user_name_unique = (record['cnt'] == 0)
-
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)        
+        # If the user does not select a file, the browser submits an
+        # empty file without a filename.
+        file = request.files['file']
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            flash('dodano plik')
+            #return redirect(url_for('download_file', name=filename))
         #cur.execute('select count(*) as cnt from users where email = %s',[user['email']])
         #record = cur.fetchone()
         #is_user_email_unique = (record['cnt'] == 0)
-    
+        
         if flow['flow_name'] == '':
             message = 'flow_name cannot be empty'
         elif flow['flowdescription'] == '':
             message = 'flowdescription cannot be empty'
-        elif flow['file_name'] == '':
-            message = 'file_name cannot be empty'
-        elif flow['file_path'] == '':
-            message = 'file_path cannot be empty'    
+        #elif flow['file_name'] == '':
+        #    message = 'file_name cannot be empty'
+        #elif flow['file_path'] == '':
+        #    message = 'file_path cannot be empty'    
         #elif not is_user_name_unique:
         #    message = 'User with the name {} already exists'.format(user['user_name'])
         #elif not is_user_email_unique:
@@ -458,10 +471,11 @@ def add_flow():
             #user_pass = UserPass(user['user_name'], user['user_pass'])
             #password_hash = user_pass.hash_password()
             #INSERT INTO files (filename, filepath, uploder) VALUES ('new_file.txt', '/path/to/new_file.txt', 1);
-            sql_statement = '''INSERT INTO files (filename, filepath, uploder) VALUES(%s,%s,%s);'''
-            cur.execute(sql_statement, [ flow['file_name'], flow['file_path'], 1 ]) #jedne do zmiany na id usera
+            #sql_statement = '''INSERT INTO files (filename, filepath, uploder) VALUES(%s,%s,%s);'''
+            sql_statement = '''INSERT INTO files (filename,filepath ,uploder) VALUES(%s,%s,%s);'''
+            cur.execute(sql_statement, [ filename,"cos" ,1 ]) #jedne do zmiany na id usera
             db.commit()
-            flash('Flow {} upolded'.format(flow['file_name']))
+            flash('Flow {} upolded'.format(filename))
 
             #INSERT INTO flow (flowname, flowdescription, file_id, number, status)
             #VALUES ('New Flow', 'Description for New Flow', 1, 123, true);
