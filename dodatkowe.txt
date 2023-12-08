@@ -1,16 +1,186 @@
+--towrzenie tabel
+create table old_users (
+    id serial primary key,
+    name varchar(100) not null unique,
+    email varchar(100) not null unique,
+    password varchar(100) not null,
+    is_active boolean not null default false,
+    is_admin boolean not null default false
+);
+
+SELECT LENGTH('af756be6069a4bc6b3cfc0ec42aa757ae70395852ff7cacda38d1ab7ba890a89c5dac5d8040c0a7c3f01a03d9bd568cff6981b457334d27007b7791778d255e9ad7ff7f182dbf4fc7448fa8f4fd0133b6878c1ae84046d380dfcbb1aba95b166')
+AS "Length of a String";
+
+CREATE TABLE "users" (
+	"id_use" serial NOT NULL,
+	"username" varchar(255) NOT NULL,
+	"password" varchar(255) NOT NULL,
+	"email" varchar(255) NOT NULL,
+	"admin" BOOLEAN NOT NULL,
+	"active" BOOLEAN NOT NULL,
+	CONSTRAINT "users_pk" PRIMARY KEY ("id_use")
+) WITH (
+  OIDS=FALSE
+);
+
+
+
+CREATE TABLE "groups" (
+	"id_grp" serial NOT NULL,
+	"groupname" varchar(255) NOT NULL,
+	"groupdescription" TEXT,
+	CONSTRAINT "groups_pk" PRIMARY KEY ("id_grp")
+) WITH (
+  OIDS=FALSE
+);
+
+
+
+CREATE TABLE "files" (
+	"id_fil" serial NOT NULL UNIQUE,
+	"filename" varchar(25) NOT NULL,
+	"filepath" varchar(50) NOT NULL,
+	"uploder" int NOT NULL,
+	CONSTRAINT "files_pk" PRIMARY KEY ("id_fil")
+) WITH (
+  OIDS=FALSE
+);
+
+
+
+CREATE TABLE "flow" (
+	"id_flo" serial NOT NULL,
+	"flowname" varchar(255) NOT NULL,
+	"flowdescription" TEXT NOT NULL,
+	"file_id" int NOT NULL,
+	"number" integer NOT NULL,
+	"status" BOOLEAN NOT NULL,
+	CONSTRAINT "flow_pk" PRIMARY KEY ("id_flo")
+) WITH (
+  OIDS=FALSE
+);
+
+
+
+CREATE TABLE "approval_table" (
+	"id_app" serial NOT NULL,
+	"flow_id" int NOT NULL,
+	"group_id" int NOT NULL,
+	"value" int NOT NULL,
+	CONSTRAINT "approval_table_pk" PRIMARY KEY ("id_app")
+) WITH (
+  OIDS=FALSE
+);
+
+
+
+CREATE TABLE "group_members" (
+	"id_gro" serial NOT NULL,
+	"user_id" int NOT NULL,
+	"group_id" int NOT NULL,
+	CONSTRAINT "group_members_pk" PRIMARY KEY ("id_gro")
+) WITH (
+  OIDS=FALSE
+);
+
+
+
+
+
+ALTER TABLE "files" ADD CONSTRAINT "files_fk0" FOREIGN KEY ("uploder") REFERENCES "users"("id_use");
+
+ALTER TABLE "flow" ADD CONSTRAINT "flow_fk0" FOREIGN KEY ("file_id") REFERENCES "files"("id_fil");
+
+ALTER TABLE "approval_table" ADD CONSTRAINT "approval_table_fk0" FOREIGN KEY ("flow_id") REFERENCES "flow"("id_flo");
+ALTER TABLE "approval_table" ADD CONSTRAINT "approval_table_fk1" FOREIGN KEY ("group_id") REFERENCES "groups"("id_grp");
+
+ALTER TABLE "group_members" ADD CONSTRAINT "group_members_fk0" FOREIGN KEY ("user_id") REFERENCES "users"("id_use");
+ALTER TABLE "group_members" ADD CONSTRAINT "group_members_fk1" FOREIGN KEY ("group_id") REFERENCES "groups"("id_grp");
+
+
+-- Insert data into "users" table
+INSERT INTO users (username, password, email, is_admin, is_active) VALUES
+  ('user1', 'password1', 'user1@example.com', false, true),
+  ('admin', 'adminpassword', 'admin@example.com', true, true),
+  ('user2', 'password2', 'user2@example.com', false, true);
+
+-- Insert data into "groups" table
+INSERT INTO groups (groupname, groupdescription) VALUES
+  ('Group1', 'Description for Group1'),
+  ('Group2', 'Description for Group2');
+
+-- Insert data into "files" table
+INSERT INTO files (filename, filepath, uploder) VALUES
+  ('file1.txt', '/path/to/file1.txt', 1),
+  ('file2.txt', '/path/to/file2.txt', 2);
+
+-- Insert data into "flow" table
+INSERT INTO flow (flowname, flowdescription, file_id, number, status) VALUES
+  ('Flow1', 'Description for Flow1', 1, 100, true),
+  ('Flow2', 'Description for Flow2', 2, 200, false);
+
+-- Insert data into "approval_table" table
+INSERT INTO approval_table (flow_id, group_id, value) VALUES
+  (1, 1, 10),
+  (2, 2, 20);
+
+-- Insert data into "group_members" table
+INSERT INTO group_members (user_id, group_id) VALUES
+  (1, 1),
+  (2, 2),
+  (3, 1);
+
+select flowname, flowdescription, file_id, number, status from flow;
+
+select id_flo, flowname, flowdescription, file_id, number, status from flow;
+
+SELECT f.id_flo, f.flowname, f.flowdescription, fl.filename AS file_name, f.number, f.status
+FROM flow f
+INNER JOIN files fl ON f.file_id = fl.id_fil;
+select id_use, username, email, is_admin, is_active from users;
+
+
+
 create table users (id integer primary key autoincrement, name varchar(100) not null unique, email varchar(100) not null unique, password test, is_active 
 booolen not null default 0, is_admin boolean not null default 0);
 
 create table transactions (id integer primary key autoincrement, currency varchar (5), amount int, user varchar(30), trans_date not null default(date()));
 
-user jtq
-password nMk 
+create table users (
+    id serial primary key,
+    name varchar(100) not null unique,
+    email varchar(100) not null unique,
+    password varchar(100) not null,
+    is_active boolean not null default false,
+    is_admin boolean not null default false
+);
+
+create table transactions (
+    id serial primary key,
+    currency varchar(5),
+    amount int,
+    user_id integer references users(id),
+    trans_date timestamp not null default current_timestamp
+);
+
+CREATE USER WorkFlow WITH PASSWORD 'password';
+
+user cqk 
+password trf  
 
 ala2@ala2
 ala2
 
 .\env\Scripts\Activate.ps1
 
+
+.\venv\Scripts\Activate.ps1
+flask run
+
 $env:FLASK_DEBUG = "1" 
 
-flask run             
+flask run       
+
+
+ccc ddd
+wartoścowa dokumentacja https://www.psycopg.org/docs/usage.html

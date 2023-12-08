@@ -1,41 +1,75 @@
 from flask import Flask, render_template, request, g, redirect, url_for, flash, session
-import sqlite3
-from datetime import date
-
-import os
+import psycopg2
 import hashlib
 import binascii
 import random
 import string
+import psycopg2.extras
 
-
-
-app_info = {
-    'db_file': 'C:\\Users\\miesz\\Documents\\GitHub\\Ostateczna\\data\\cantor.db'
-}
+import os
+from werkzeug.utils import secure_filename
+from flask import send_from_directory
 
 app = Flask(__name__)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+UPLOAD_FOLDER = 'D:\dump'
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
 def get_db():
-    if not hasattr(g, 'sqlite_db'):
-        conn = sqlite3.connect(app_info['db_file'])
-        conn.row_factory = sqlite3.Row
-        g.sqlite_db = conn
-    return g.sqlite_db
+    if not hasattr(g, 'db'):
+        dbname = 'test_workflow'
+        user = 'postgres'
+        password = 'a'
+        host = 'localhost'
+        port = '5432'
+        conn = psycopg2.connect(dbname=dbname, user=user, password=password, host=host, port=port)
+        g.db = conn
+    return g.db
 
 @app.teardown_appcontext
 def close_db(error):
-    if hasattr(g, 'sqlite_db'):
-        g.sqlite_db.close()
+    if hasattr(g, 'db'):
+        g.db.close()
 
+@app.route('/init_app')
+def init_app():
+    db = get_db()
+    cur = db.cursor()
+
+    # check if there are users defined (at least one active admin required)
+    cur.execute("SELECT COUNT(*) FROM users WHERE is_active = TRUE AND is_admin = TRUE")
+    active_admins = cur.fetchone()[0]
+
+    if active_admins > 0:
+        flash('Application is already set-up. Nothing to do')
+        return redirect(url_for('index'))
+
+    # if not - create/update admin account with a new password and admin privileges, display
+    user_pass = UserPass()
+    user_pass.get_random_user_password()
+    username = user_pass.user[:100]  # truncate the name to 100 characters
+    email = 'noone@nowhere.no'
+    password = user_pass.hash_password()
+    sql_statement = "INSERT INTO users (username, email, password, is_active, is_admin) VALUES (%s, %s, %s, %s, %s)"
+    cur.execute(sql_statement, [username, email, password, True, True])
+    db.commit()
+    flash('User {} with password {} has been created'.format(user_pass.user, user_pass.password))
+    return redirect(url_for('index'))
 
 @app.route('/login', methods=['GET','POST'])
 def login():
 
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+
     if request.method == 'GET':
-        return render_template('login.html', active_menu='login')
+        return render_template('login.html', active_menu='login', login=login)
     else:
         user_name = '' if 'user_name' not in request.form else request.form['user_name']
         user_pass = '' if 'user_pass' not in request.form else request.form['user_pass']
@@ -46,7 +80,7 @@ def login():
     if login_record != None:
         session['user'] = user_name
         flash('Logon succesfull, welcome {}'.format(user_name))
-        return redirect(url_for('index'))
+        return redirect(url_for('admin_menu'))
     else:
         flash('Logon failed, try again')
         return render_template('login.html')
@@ -63,6 +97,9 @@ class UserPass:
     def __init__(self, user='', password=''):
         self.user = user
         self.password = password
+        self.email = ''
+        self.is_valid = False
+        self.is_active = False
 
     def hash_password(self):
         # Hash a password for storing.
@@ -90,80 +127,119 @@ class UserPass:
     
     def login_user(self):
         db = get_db()
-        sql_statement = 'select id, name, email, password, is_active, is_admin from users where name=?'
-        cur = db.execute(sql_statement, [self.user])
+        sql_statement = 'select id_use, username, email, password, is_active, is_admin from users where username=%s'
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute(sql_statement, [self.user])
         user_record = cur.fetchone()
         if user_record != None and self.verify_password(user_record['password'], self.password):
             return user_record
         else:
             self.user = None
             self.password = None
-            return None 
+            return None
         
-@app.route('/init_app')
-def init_app():
+    def get_user_info(self):
+        db = get_db()
+        sql_statement = 'select username, email, is_active, is_admin from users where username=%s'
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute(sql_statement, [self.user])
+        db_user = cur.fetchone()
 
-    # check if there are users defined (at least one active admin required)
-    db = get_db()
-    sql_statement = 'select count(*) as cnt from users where is_active and is_admin;'
-    cur = db.execute(sql_statement)
-    active_admins = cur.fetchone()
-
-    if active_admins!=None and active_admins['cnt']>0:
-        flash('Application is already set-up. Nothing to do')
-        return redirect(url_for('index'))
-
- # if not - create/update admin account with a new password and admin privileges, display
-
-    user_pass = UserPass()
-    user_pass.get_random_user_password()
-    sql_statement = '''insert into users(name, email, password, is_active, is_admin)
-    values(?,?,?,True, True);'''
-    db.execute(sql_statement, [user_pass.user, 'noone@nowhere.no', user_pass.hash_password()])
-    db.commit()
-    flash('User {} with password {} has been created'.format(user_pass.user, user_pass.password))
-    return redirect(url_for('index')) 
-
+        if db_user == None:
+            self.is_valid = False
+            self.is_admin = False
+            self.email = ''
+        elif db_user['is_active']!=1:
+            self.is_valid = False
+            self.is_admin = False
+            self.email = db_user['email']
+        else:
+            self.is_valid = True
+            self.is_admin = db_user['is_admin']
+            self.email = db_user['email']       
+        
 @app.route('/users')
 def users():
+    # Check if user is logged in and is an admin
+    #login = UserPass(session.get('user'))
+    #login.get_user_info()
+    #if not login.is_valid or not login.is_admin:
+    #    flash(f'Użytkownik {login.user} nie jest adminem')
+    #    return redirect(url_for('login'))
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid:
+        flash(f'Użytkownik {login.user} nie aktywny')
+        return redirect(url_for('login'))
+
+
     db = get_db()
-    sql_command = 'select id, name, email, is_admin, is_active from users;'
-    cur = db.execute(sql_command)
+    sql_command = 'select id_use, username, email, is_admin, is_active from users;'
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(sql_command)
     users=cur.fetchall()
-    return render_template('users.html', active_menu='users', users=users)
+
+    return render_template('users.html', active_menu='users', users=users, login=login)
 
 @app.route('/user_status_change/<action>/<user_name>')
 def user_status_change(action, user_name):
-	return 'not implemented'
+
+    # app.py – code to add to functions – admin access
+
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
+        return redirect(url_for('login'))
+
+    db = get_db()
+
+    if action == 'active':
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        #tatus_sql='select is_active from users where name='aaa';'
+        cur.execute("update users set is_active = ((is_active::int + 1) %% 2)::boolean where username = %s and username <> %s ", (user_name, login.user))       
+        db.commit()
+    elif action == 'admin':
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute("update users set is_admin = ((is_admin::int + 1) %% 2)::boolean where username = %s and username <> %s", (user_name, login.user))
+        db.commit()
+
+    return redirect(url_for('users'))
 
 @app.route('/edit_user/<user_name>', methods=['GET', 'POST'])
 def edit_user(user_name):
 
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
+        return redirect(url_for('login'))    
+
     db = get_db()
-    cur = db.execute('select name, email from users where name = ?', [user_name])
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute('select username, email from users where username = %s', [user_name])
     user = cur.fetchone()
-    message = None
 
     if user == None:
         flash('No such user')
         return redirect(url_for('users'))
 
     if request.method == 'GET':
-        return render_template('edit_user.html', active_menu='users', user=user)
+        return render_template('edit_user.html', active_menu='users', user=user, login=login)
     else:
         new_email = '' if 'email' not in request.form else request.form["email"]
         new_password = '' if 'user_pass' not in request.form else request.form['user_pass']
 
         if new_email != user['email']:
-            sql_statement = "update users set email = ? where name = ?"
-            db.execute(sql_statement, [new_email, user_name])
+            sql_statement = "update users set email = %s where username = %s"
+            cur.execute(sql_statement, [new_email, user_name])
             db.commit()
             flash('Email was changed')
 
         if new_password != '':
             user_pass = UserPass(user_name, new_password)
-            sql_statement = "update users set password = ? where name = ?"
-            db.execute(sql_statement, [user_pass.hash_password(), user_name])
+            sql_statement = "update users set password = %s where username = %s"
+            cur.execute(sql_statement, [user_pass.hash_password(), user_name])
             db.commit()
             flash('Password was changed')
 
@@ -171,21 +247,32 @@ def edit_user(user_name):
 
 @app.route('/user_delete/<user_name>')
 def delete_user(user_name):
-	
-    if not 'user' in session:
-        return redirect(url_for('login'))
-    login = session['user']
+    
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
+        return redirect(url_for('login'))   
+
+    #if not 'user' in session:
+    #    return redirect(url_for('login'))
+    #login = session['user']
 
     db=get_db()
-    sql_statement = "delete from users where name = ? and name <> ?"
-    db.execute(sql_statement, [user_name, login])
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    sql_statement = "delete from users where username = %s and username <> %s"
+    cur.execute(sql_statement, [user_name, login.user])
     db.commit()
     return redirect(url_for('users'))
 
 @app.route('/new_user', methods=['GET', 'POST'])
 def new_user():
-    if not 'user' in session:
-        return redirect(url_for('login'))
+    
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
+        return redirect(url_for('login'))   
 
     login = session['user']
     db = get_db()
@@ -193,17 +280,18 @@ def new_user():
     user = {}
 
     if request.method == 'GET':
-        return render_template('new_user.html', active_menu='users', user=user)
+        return render_template('new_user.html', active_menu='users', user=user, login=login)
     else:
         user['user_name'] = '' if not 'user_name' in request.form else request.form['user_name']
         user['email'] = '' if not 'email' in request.form else request.form['email']
         user['user_pass'] = '' if not 'user_pass' in request.form else request.form['user_pass']
-        cursor = db.execute('select count(*) as cnt from users where name = ?',[user['user_name']])
-        record = cursor.fetchone()
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute('select count(*) as cnt from users where username = %s',[user['user_name']])
+        record = cur.fetchone()
         is_user_name_unique = (record['cnt'] == 0)
 
-        cursor = db.execute('select count(*) as cnt from users where email = ?', [user['email']])
-        record = cursor.fetchone()
+        cur.execute('select count(*) as cnt from users where email = %s',[user['email']])
+        record = cur.fetchone()
         is_user_email_unique = (record['cnt'] == 0)
     
         if user['user_name'] == '':
@@ -220,80 +308,394 @@ def new_user():
         if not message:
             user_pass = UserPass(user['user_name'], user['user_pass'])
             password_hash = user_pass.hash_password()
-            sql_statement = '''insert into users(name, email, password, is_active, is_admin) values(?,?,?, True, False);'''
-            db.execute(sql_statement, [user['user_name'], user['email'], password_hash])
+            sql_statement = '''insert into users(username, email, password, is_active, is_admin) values(%s,%s,%s, True, False);'''
+            cur.execute(sql_statement, [user['user_name'][:100], user['email'], password_hash])
             db.commit()
             flash('User {} created'.format(user['user_name']))
             return redirect(url_for('users'))
         else:
             flash('Correct error: {}'.format(message))
-            return render_template('new_user.html', active_menu='users', user=user)
+            return render_template('new_user.html', active_menu='users', user=user, login=login)
 
 @app.route('/')
 def index():
     return render_template('base.html')
 
-@app.route('/exchange', methods=['GET', 'POST'])
-def exchange():
+
+@app.route('/main')
+def main():
+    return render_template('base.html')
+
+@app.route('/admin_menu')
+def admin_menu():
+    return render_template('admin_menu.html')
+
+@app.route('/admin_bugs')
+def admin_bugs():
+    return render_template('admin_bugs.html')
+
+@app.route('/admin_docks')
+def admin_docks():
+    return render_template('admin_docks.html')
+
+@app.route('/admin_edit_user')
+def admin_edit_user():
+    return render_template('admin_edit_user.html')
+
+@app.route('/admin_settings')
+def admin_settings():
+    return render_template('admin_settings.html')
+
+@app.route('/admin_upload')
+def admin_upload():
+    return render_template('admin_upload.html')
+
+@app.route('/upload')
+def upload():
+    return render_template('upload.html')
+
+@app.route('/settings')
+def settings():
+    return render_template('settings.html')
+
+@app.route('/docks')
+def docks():
+    return render_template('docks.html')
+
+@app.route('/new_bugs')
+def new_bugs():
+    return render_template('new_bugs.html')
+
+@app.route('/new_flow')
+def new_flow():
+    return render_template('new_flow.html')
+
+@app.route('/flows')
+def flows():
+    return render_template('flows.html')
+
+
+
+@app.route('/workflows', methods=['GET', 'POST'])
+def workflows():
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid:
+        flash(f'Użytkownik {login.user} nie aktywny')
+        return redirect(url_for('login'))
+
+
+    db = get_db()
+    sql_command = 'SELECT f.id_flo, f.flowname, f.flowdescription, fl.filename AS file_name, f.number, f.status FROM flow f INNER JOIN files fl ON f.file_id = fl.id_fil;'
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(sql_command)
+    flows=cur.fetchall() 
+
+    return render_template('flows.html', active_menu='users', flows=flows, login=login)
+
+
+
+@app.route('/flow_info/<id_flo>', methods=['GET', 'POST'])
+def flow_info(id_flo):
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid:
+       flash(f'Użytkownik {login.user} nie aktywny')
+       return redirect(url_for('login'))
+
+
+    db = get_db()
+    sql_command = 'SELECT f.id_flo, f.flowname, f.flowdescription, fl.filename AS file_name, f.number, f.status FROM flow f INNER JOIN files fl ON f.file_id = fl.id_fil;'
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(sql_command)
+    flows=cur.fetchall() 
+    
+    #sql_command2 = 'SELECT id_app, flow_id, group_id, value FROM approval_table;'
+    sql_command2 = 'SELECT id_app, flow_id, group_id, value FROM approval_table where flow_id=%s;'
+    
+    cur2 = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur2.execute(sql_command2,[id_flo])
+    approvals=cur2.fetchall() 
+
+    return render_template('flows_info.html', active_menu='users', flows=flows, login=login, approvals=approvals)
+
+
+@app.route('/add_flow', methods=['GET', 'POST'])
+def add_flow():
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid:
+        flash(f'Użytkownik {login.user} nie aktywny')
+        return redirect(url_for('login'))
+
+    #login = session['user']
+    db = get_db()
+    message = None
+    flow = {}
+
     if request.method == 'GET':
-        return render_template('exchange.html')
+        return render_template('new_flow.html', active_menu='new_flow', flow=flow, login=login)
     else:
-        amount = 100
-        if 'amount' in request.form:
-            amount = request.form['amount']
-
-        currency = "EUR"
-        if 'currency' in request.form:
-            currency = request.form['currency']
+        flow['flow_name'] = '' if not 'flow_name' in request.form else request.form['flow_name']
+        flow['flowdescription'] = '' if not 'flowdescription' in request.form else request.form['flowdescription']
+        #flow['file_name'] = '' if not 'file_name' in request.form else request.form['file_name']
+        #flow['file_path'] = '' if not 'file_path' in request.form else request.form['file_path']
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        #cur.execute('select count(*) as cnt from users where username = %s',[user['user_name']])
+        #record = cur.fetchone()
+        #is_user_name_unique = (record['cnt'] == 0)
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)        
+        # If the user does not select a file, the browser submits an
+        # empty file without a filename.
+        file = request.files['file']
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            flash('dodano plik')
+            #return redirect(url_for('download_file', name=filename))
+        #cur.execute('select count(*) as cnt from users where email = %s',[user['email']])
+        #record = cur.fetchone()
+        #is_user_email_unique = (record['cnt'] == 0)
         
-        db = get_db()
-        sql_command = 'insert into transactions (currency, amount, user) values (?, ?, ?);'
-        db.execute(sql_command, [currency, amount, 'admin'])
-        db.commit()
-        return render_template('exchange_results.html', currency=currency, amount=amount)
+        if flow['flow_name'] == '':
+            message = 'flow_name cannot be empty'
+        elif flow['flowdescription'] == '':
+            message = 'flowdescription cannot be empty'
+        #elif flow['file_name'] == '':
+        #    message = 'file_name cannot be empty'
+        #elif flow['file_path'] == '':
+        #    message = 'file_path cannot be empty'    
+        #elif not is_user_name_unique:
+        #    message = 'User with the name {} already exists'.format(user['user_name'])
+        #elif not is_user_email_unique:
+        #    message = 'User with the email {} alresdy exists'.format(user['email']) 
+    
+        if not message:
+            #user_pass = UserPass(user['user_name'], user['user_pass'])
+            #password_hash = user_pass.hash_password()
+            #INSERT INTO files (filename, filepath, uploder) VALUES ('new_file.txt', '/path/to/new_file.txt', 1);
+            #sql_statement = '''INSERT INTO files (filename, filepath, uploder) VALUES(%s,%s,%s);'''
+            sql_statement = '''INSERT INTO files (filename,filepath ,uploder) VALUES(%s,%s,%s);'''
+            cur.execute(sql_statement, [ filename,"cos" ,1 ]) #jedne do zmiany na id usera
+            db.commit()
+            flash('Flow {} upolded'.format(filename))
 
-@app.route('/history')    
-def history():
-    db=get_db()
-    sql_command='select id, currency, amount, trans_date from transactions;'
-    cur = db.execute(sql_command)
-    transactions = cur.fetchall()
+            #INSERT INTO flow (flowname, flowdescription, file_id, number, status)
+            #VALUES ('New Flow', 'Description for New Flow', 1, 123, true);
 
-    return render_template('history.html', transactions=transactions)
+            sql_statement = '''INSERT INTO flow (flowname, flowdescription, file_id, number, status) VALUES(%s,%s,1, 0, false);'''
+            cur.execute(sql_statement, [ flow['flow_name'], flow['flowdescription'] ])    
+            db.commit()
+            flash('Flow {} created'.format(flow['flow_name']))
 
-@app.route('/delete_transaction/<int:transaction_id>')
-def delete_transaction(transaction_id):
+            return redirect(url_for('workflows'))
+        else:
+            flash('Correct error: {}'.format(message))
+            return render_template('new_flow.html', active_menu='workflows', flow=flow, login=login)
+        
+@app.route('/groups', methods=['GET', 'POST'])
+def groups():
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid:
+       flash(f'Użytkownik {login.user} nie aktywny')
+       return redirect(url_for('login'))
+
+
     db = get_db()
-    sql_statement='delete from transactions where id=?;'
-    db.execute(sql_statement, [transaction_id])
-    db.commit()
-    flash('usunieto!')
-    return redirect(url_for('history'))
+    sql_command = 'SELECT * FROM groups;'
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(sql_command)
+    groups=cur.fetchall() 
 
-@app.route('/edit_transaction/<int:transaction_id>', methods=['GET', 'POST'])
-def edit_transaction(transaction_id):
+    return render_template('groups.html', active_menu='groups', login=login, groups=groups)
+
+@app.route('/groups/info/<id_grp>', methods=['GET', 'POST'])
+def grp_info(id_grp):
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid:
+       flash(f'Użytkownik {login.user} nie aktywny')
+       return redirect(url_for('login'))
+
+
     db = get_db()
+    sql_command = 'SELECT * FROM groups;'
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(sql_command)
+    groups=cur.fetchall() 
+    
+    #sql_command2 = 'SELECT id_app, flow_id, group_id, value FROM approval_table;'
+    sql_command2 = 'SELECT id_gro, g.groupname, u.username, u.email FROM group_members gm JOIN users u ON gm.user_id = u.id_use JOIN groups g ON gm.group_id = g.id_grp WHERE g.id_grp = %s ORDER BY g.groupname, u.username;'
+    
+    cur2 = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur2.execute(sql_command2,[id_grp])
+    members=cur2.fetchall() 
+
+    return render_template('groups_info.html', active_menu='groups', login=login, groups=groups, members=members)
+
+@app.route('/add_grp', methods=['GET', 'POST'])
+def add_grp():
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid:
+        flash(f'Użytkownik {login.user} nie aktywny')
+        return redirect(url_for('login'))
+    
+    db = get_db()
+    message = None
+    grp = {}
 
     if request.method == 'GET':
-        sql_statement = 'select id, currency, amount from transactions where id=?;'
-        cur = db.execute(sql_statement, [transaction_id])
-        transaction = cur.fetchone()
-
-        if transaction is None:
-            flash('No such transaction!')
-            return redirect(url_for('history'))
-        else:
-            return render_template('edit_transaction.html', transaction=transaction)
-    elif request.method == 'POST':
-        amount = 100
-        if 'amount' in request.form:
-            amount = request.form['amount']
-
-        currency = "EUR"
-        if 'currency' in request.form:
-            currency = request.form['currency']
+        return render_template('new_grp.html', active_menu='new_grp', grp=grp, login=login)
+    else:
+        grp['group_name'] = '' if not 'group_name' in request.form else request.form['group_name']
+        grp['group_description'] = '' if not 'group_description' in request.form else request.form['group_description']
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    
+        if grp['group_name'] == '':
+            message = 'group_name cannot be empty'
+        elif grp['group_description'] == '':
+            message = 'group_description cannot be empty'    
+    
+        if not message:
+            sql_statement = '''INSERT INTO groups ( groupname, groupdescription) VALUES(%s,%s);'''
+            cur.execute(sql_statement, [ grp['group_name'], grp['group_description'] ]) #jedne do zmiany na id usera
+            db.commit()
+            flash('Created {} group'.format(grp['group_name']))
+            return redirect(url_for('groups'))
         
-        sql_command = 'update transactions set currency=?, amount=?, user=?, trans_date=? where id=?;'
-        db.execute(sql_command, [currency, amount, 'admin', date.today(), transaction_id])
-        db.commit()
-        return redirect(url_for('history'))  # Redirect to 'history' after successful update
+        else:
+            flash('Correct error: {}'.format(message))
+            return render_template('new_grp.html', active_menu='groups', grp=grp, login=login)
+        
+@app.route('/add_group_member/', methods=['GET', 'POST'])
+def add_group_member():
+
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
+        return redirect(url_for('login'))    
+
+    db = get_db()
+    message = None
+    mem = {}
+
+    if request.method == 'GET':
+        return render_template('add_grp_mem.html', active_menu='add_grp_mem', mem=mem, login=login)
+    else: 
+        mem['user_id'] = '' if not 'user_id' in request.form else request.form['user_id']
+        mem['group_id'] = '' if not 'group_id' in request.form else request.form['group_id']
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    
+        if mem['user_id'] == '':
+            message = 'user id cannot be empty'  
+        elif mem['group_id'] == '':
+            message = 'group id cannot be empty'     
+    
+        if not message:
+            sql_statement = '''INSERT INTO group_members ( user_id, group_id) VALUES(%s,%s);'''
+            cur.execute(sql_statement, [ mem['user_id'], mem['group_id'] ]) 
+            db.commit()
+            flash('Add user {} to group'.format(mem['user_id']))
+            return redirect(url_for('groups'))
+        
+        else:
+            flash('Correct error: {}'.format(message))
+            return render_template('add_grp_mem.html', active_menu='add_grp_mem', mem=mem, login=login)
+        
+@app.route('/delete_group_member/<id_gro>')
+def delete_group_member(id_gro):
+    
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
+        return redirect(url_for('login'))   
+
+    db=get_db()
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    sql_statement = "delete from group_members where id_gro = %s"
+    cur.execute(sql_statement, [id_gro])
+    db.commit()
+    return redirect(url_for('groups'))
+
+@app.route('/add_group_flow/', methods=['GET', 'POST'])
+def add_group_flow():
+
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
+        return redirect(url_for('login'))    
+
+    db = get_db()
+    message = None
+    grop_add = {}
+
+    if request.method == 'GET':
+        return render_template('add_grp_flow.html', active_menu='add_grp_mem', grop_add=grop_add, login=login)
+    else: 
+        grop_add['flow_id'] = '' if not 'flow_id' in request.form else request.form['flow_id']
+        grop_add['group_id'] = '' if not 'group_id' in request.form else request.form['group_id']
+        grop_add['value'] = '' if not 'value' in request.form else request.form['value']
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    
+        if grop_add['flow_id'] == '':
+            message = 'flow is cannot be empty'  
+        elif grop_add['group_id'] == '':
+            message = 'group id cannot be empty'
+        elif grop_add['value'] == '':
+            message = 'value id cannot be empty'            
+    
+        if not message:
+            sql_statement = '''INSERT INTO approval_table ( flow_id, group_id, value) VALUES(%s,%s,%s);'''
+            cur.execute(sql_statement, [ grop_add['flow_id'], grop_add['group_id'], grop_add['value'] ]) 
+            db.commit()
+            flash('Add group {} to flow'.format(grop_add['group_id']))
+            return redirect(url_for('workflows'))
+        
+        else:
+            flash('Correct error: {}'.format(message))
+            return render_template('add_grp_flow.html', active_menu='add_grp_mem', grop_add=grop_add, login=login)
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/upolad', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        # If the user does not select a file, the browser submits an
+        # empty file without a filename.
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return redirect(url_for('download_file', name=filename))
+    return '''
+    <!doctype html>
+    <title>Upload new File</title>
+    <h1>Upload new File</h1>
+    <form method=post enctype=multipart/form-data>
+      <input type=file name=file>
+      <input type=submit value=Upload>
+    </form>
+    '''        
+
+@app.route('/uploads/<name>')
+def download_file(name):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], name)
