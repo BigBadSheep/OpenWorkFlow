@@ -184,3 +184,8 @@ flask run
 
 ccc ddd
 wartoścowa dokumentacja https://www.psycopg.org/docs/usage.html
+
+Zaqxswcde123!
+
+haslo dla postgresa postgres
+workflow workflow

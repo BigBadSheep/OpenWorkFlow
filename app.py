@@ -23,9 +23,9 @@ app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
 def get_db():
     if not hasattr(g, 'db'):
-        dbname = 'test_workflow'
-        user = 'postgres'
-        password = 'a'
+        dbname = 'workflow'
+        user = 'wrokflow'
+        password = 'workflow'
         host = 'localhost'
         port = '5432'
         conn = psycopg2.connect(dbname=dbname, user=user, password=password, host=host, port=port)
