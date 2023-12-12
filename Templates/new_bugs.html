@@ -215,7 +215,7 @@
         <div class="container">
             <!-- Formularz zgłaszania błędu -->
             <h2>Zgłoś błąd</h2>
-            <form method="POST" action="{{ url_for('new_bugs') }}">
+            <form id="bug_form" method="POST" action="{{ url_for('new_bugs') }}" enctype=multipart/form-data>
                 <div class="form-group">
                     <label for="name">Twoje imię i nazwisko</label>
                     <input type="text" class="form-control" id="name" name="name" required>
@@ -224,7 +224,7 @@
                     <label for="error_description">Opis błędu</label>
                     <textarea class="form-control" id="error_description" name="error_description" rows="4" required></textarea>
                 </div>
-                <button type="submit" class="btn btn-primary btn-submit">Zgłoś błąd</button>
+                <button type="submit" class="btn btn-primary btn-submit" value="Send">Zgłoś błąd</button>
             </form>
         </div>
     </div>

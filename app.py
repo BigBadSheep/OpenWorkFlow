@@ -24,7 +24,7 @@ app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 def get_db():
     if not hasattr(g, 'db'):
         dbname = 'workflow'
-        user = 'wrokflow'
+        user = 'workflow'
         password = 'workflow'
         host = 'localhost'
         port = '5432'
@@ -330,10 +330,6 @@ def main():
 def admin_menu():
     return render_template('base.html')
 
-@app.route('/admin_bugs')
-def admin_bugs():
-    return render_template('base.html')
-
 @app.route('/admin_docks')
 def admin_docks():
     return render_template('base.html')
@@ -361,12 +357,6 @@ def settings():
 @app.route('/docks')
 def docks():
     return render_template('base.html')
-
-@app.route('/new_bugs')
-def new_bugs():
-    return render_template('base.html')
-
-
 
 @app.route('/workflows', methods=['GET', 'POST'])
 def workflows():
@@ -691,3 +681,68 @@ def upload_file():
 @app.route('/uploads/<name>')
 def download_file(name):
     return send_from_directory(app.config["UPLOAD_FOLDER"], name)
+
+@app.route('/new_bugs', methods=['GET', 'POST'])
+def new_bugs():
+    #możliwe błedy z logowaniem
+    db = get_db()
+    message = None
+    bug = {}
+
+    if request.method == 'GET':
+        return render_template('new_bugs.html', active_menu='new_bugs', bug=bug, login=login)
+    else:
+        bug['name'] = '' if not 'name' in request.form else request.form['name']
+        bug['error_description'] = '' if not 'error_description' in request.form else request.form['error_description']
+
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        if bug['name'] == '':
+            message = 'name cannot be empty'
+        elif bug['error_description'] == '':
+            message = 'error_description cannot be empty'
+
+        if not message:
+            sql_statement = '''INSERT INTO bugs (name ,description) VALUES(%s,%s);'''
+            cur.execute(sql_statement, [bug['name'], bug['error_description']])
+            db.commit()
+            flash('Bug {} upolded'.format(bug))
+
+            return redirect(url_for('main'))
+        else:
+            flash('Correct error: {}'.format(message))
+            return render_template('new_bugs.html', active_menu='new_bugs', bug=bug, login=login)
+        
+@app.route('/admin_bugs')
+def admin_bugs():
+
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
+        return redirect(url_for('login')) 
+
+
+    db = get_db()
+    sql_command = 'select id_bug, name, description from bugs;'
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(sql_command)
+    bugs=cur.fetchall()
+
+    return render_template('admin_bugs.html', active_menu='users', bugs=bugs, login=login)
+
+@app.route('/bug_delete/<id_bug>')
+def bug_delete(id_bug):
+    
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
+        return redirect(url_for('login'))   
+
+    db=get_db()
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    sql_statement = "delete from bugs where id_bug = %s"
+    cur.execute(sql_statement, [id_bug])
+    db.commit()
+    return redirect(url_for('admin_bugs'))

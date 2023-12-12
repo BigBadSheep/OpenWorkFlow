@@ -83,8 +83,14 @@ CREATE TABLE "group_members" (
   OIDS=FALSE
 );
 
-
-
+CREATE TABLE "public.bugs" (
+	"id_bug" serial NOT NULL,
+	"name" VARCHAR(255) NOT NULL,
+	"description" VARCHAR(255) NOT NULL,
+	CONSTRAINT "bugs_pk" PRIMARY KEY ("id_bug")
+) WITH (
+  OIDS=FALSE
+);
 
 
 ALTER TABLE "files" ADD CONSTRAINT "files_fk0" FOREIGN KEY ("uploder") REFERENCES "users"("id_use");
@@ -165,8 +171,8 @@ create table transactions (
 
 CREATE USER WorkFlow WITH PASSWORD 'password';
 
-user cqk 
-password trf  
+user mzg 
+password PJH  
 
 ala2@ala2
 ala2

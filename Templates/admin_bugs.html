@@ -180,17 +180,20 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {% for bug in bugs %}
                     <tr>
-                        <td>Przykładowy użytkownik</td>
-                        <td>przykladowy błąd</td>
+                        <td>{{ bug.name }}</td>
+                        <td>{{ bug.description }}</td>
                         <td class="btn-container">
-                            <a href="#" class="btn btn-danger btn-sm" onclick="return confirm('Czy na pewno chcesz usunąć zgłoszenie?');">
+                            <a href="{{ url_for('bug_delete', id_bug=bug.id_bug) }}" class="btn btn-danger btn-sm" onclick="return confirm('Czy na pewno chcesz usunąć zgłoszenie?');">
                                 <i class="fa fa-trash"></i> Delete
                             </a>
                         </td>
                     </tr>
+                    {% endfor %}    
                 </tbody>
             </table>
+              
         </div>
     </div>
 
