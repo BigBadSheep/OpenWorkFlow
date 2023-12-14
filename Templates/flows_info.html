@@ -34,9 +34,7 @@
 <table >
   <thead>
   <tr>
-  <th >#</th>
-  <th >flow_id</th>
-  <th >group_id</th>
+  <th > Nazwa grupy</th>
   <th >value</th>
 
   </tr>
@@ -44,10 +42,9 @@
   <tbody>
   {% for approval in approvals %}
   <tr>
-  <th scope="row">{{ approval.id_app }}</th>
-  <td>{{ approval.flow_id }}</td>
-  <td>{{ approval.group_id }}</td>
-  <td> {{ approval.value }} </td>
+  
+  <td>{{ approval.groupname }}</td>
+  <td>{{ approval.value }}</td>
 
   </tr>
   {%endfor%}

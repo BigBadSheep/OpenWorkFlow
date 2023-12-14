@@ -10,10 +10,10 @@ import os
 from werkzeug.utils import secure_filename
 from flask import send_from_directory
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='Templates')
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    app.run(host='0.0.0.0')
 
 UPLOAD_FOLDER = 'D:\dump'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
@@ -100,6 +100,7 @@ class UserPass:
         self.email = ''
         self.is_valid = False
         self.is_active = False
+        self.is_cyber = False
 
     def hash_password(self):
         # Hash a password for storing.
@@ -118,11 +119,11 @@ class UserPass:
         return pwdhash == stored_password
 
     def get_random_user_password(self):
-        random_user = ''.join(random.choice(string.ascii_lowercase) for _ in range(3))
+        random_user = ''.join(random.choice(string.ascii_lowercase) for _ in range(8))
         self.user = random_user
 
         password_characters = string.ascii_letters  # + string.digits + string.punctuation
-        random_password = ''.join(random.choice(password_characters) for _ in range(3))
+        random_password = ''.join(random.choice(password_characters) for _ in range(20))
         self.password = random_password
     
     def login_user(self):
@@ -140,7 +141,7 @@ class UserPass:
         
     def get_user_info(self):
         db = get_db()
-        sql_statement = 'select username, email, is_active, is_admin from users where username=%s'
+        sql_statement = 'select username, email, is_active, is_admin, is_cyber from users where username=%s'
         cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute(sql_statement, [self.user])
         db_user = cur.fetchone()
@@ -153,11 +154,12 @@ class UserPass:
             self.is_valid = False
             self.is_admin = False
             self.email = db_user['email']
-        else:
+        else: 
             self.is_valid = True
             self.is_admin = db_user['is_admin']
+            self.is_cyber = db_user['is_cyber']
             self.email = db_user['email']       
-        
+
 @app.route('/users')
 def users():
     # Check if user is logged in and is an admin
@@ -375,6 +377,22 @@ def workflows():
 
     return render_template('flows.html', active_menu='users', flows=flows, login=login)
 
+@app.route('/user_workflows', methods=['GET', 'POST'])
+def user_workflows():
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid:
+        flash(f'Użytkownik {login.user} nie aktywny')
+        return redirect(url_for('login'))
+
+
+    db = get_db()
+    sql_command = 'SELECT f.id_flo, f.flowname, f.flowdescription, fl.filename AS file_name, f.number, f.status FROM flow f INNER JOIN files fl ON f.id_fil = fl.id_fil;'
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(sql_command)
+    flows=cur.fetchall() 
+
+    return render_template('flows.html', active_menu='users', flows=flows, login=login)
 
 
 @app.route('/flow_info/<id_flo>', methods=['GET', 'POST'])
@@ -393,7 +411,7 @@ def flow_info(id_flo):
     flows=cur.fetchall() 
     
     #sql_command2 = 'SELECT id_app, flow_id, group_id, value FROM approval_table;'
-    sql_command2 = 'SELECT id_app, flow_id, group_id, value FROM approval_table where flow_id=%s;'
+    sql_command2 = 'SELECT g.groupname, at.value FROM public.flow f JOIN public.approval_table at ON f.id_flo = at.flow_id JOIN public.groups g ON at.group_id = g.id_grp WHERE f.id_flo = %s ORDER BY at.value ASC;'
     
     cur2 = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur2.execute(sql_command2,[id_flo])
@@ -420,17 +438,12 @@ def add_flow():
     else:
         flow['flow_name'] = '' if not 'flow_name' in request.form else request.form['flow_name']
         flow['flowdescription'] = '' if not 'flowdescription' in request.form else request.form['flowdescription']
-        #flow['file_name'] = '' if not 'file_name' in request.form else request.form['file_name']
-        #flow['file_path'] = '' if not 'file_path' in request.form else request.form['file_path']
         cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        #cur.execute('select count(*) as cnt from users where username = %s',[user['user_name']])
-        #record = cur.fetchone()
-        #is_user_name_unique = (record['cnt'] == 0)
+        
         if 'file' not in request.files:
             flash('No file part')
             return redirect(request.url)        
-        # If the user does not select a file, the browser submits an
-        # empty file without a filename.
+        
         file = request.files['file']
         if file.filename == '':
             flash('No selected file')
@@ -439,36 +452,18 @@ def add_flow():
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             flash('dodano plik')
-            #return redirect(url_for('download_file', name=filename))
-        #cur.execute('select count(*) as cnt from users where email = %s',[user['email']])
-        #record = cur.fetchone()
-        #is_user_email_unique = (record['cnt'] == 0)
+
         
         if flow['flow_name'] == '':
             message = 'flow_name cannot be empty'
         elif flow['flowdescription'] == '':
             message = 'flowdescription cannot be empty'
-        #elif flow['file_name'] == '':
-        #    message = 'file_name cannot be empty'
-        #elif flow['file_path'] == '':
-        #    message = 'file_path cannot be empty'    
-        #elif not is_user_name_unique:
-        #    message = 'User with the name {} already exists'.format(user['user_name'])
-        #elif not is_user_email_unique:
-        #    message = 'User with the email {} alresdy exists'.format(user['email']) 
     
         if not message:
-            #user_pass = UserPass(user['user_name'], user['user_pass'])
-            #password_hash = user_pass.hash_password()
-            #INSERT INTO files (filename, filepath, uploder) VALUES ('new_file.txt', '/path/to/new_file.txt', 1);
-            #sql_statement = '''INSERT INTO files (filename, filepath, uploder) VALUES(%s,%s,%s);'''
             sql_statement = '''INSERT INTO files (filename,filepath ,uploder) VALUES(%s,%s,%s);'''
             cur.execute(sql_statement, [ filename,"cos" ,1 ]) #jedne do zmiany na id usera
             db.commit()
             flash('Flow {} upolded'.format(filename))
-
-            #INSERT INTO flow (flowname, flowdescription, file_id, number, status)
-            #VALUES ('New Flow', 'Description for New Flow', 1, 123, true);
 
             sql_statement = '''INSERT INTO flow (flowname, flowdescription, file_id, number, status) VALUES(%s,%s,1, 0, false);'''
             cur.execute(sql_statement, [ flow['flow_name'], flow['flowdescription'] ])    
@@ -570,24 +565,46 @@ def add_group_member():
     mem = {}
 
     if request.method == 'GET':
-        return render_template('add_grp_mem.html', active_menu='add_grp_mem', mem=mem, login=login)
+        
+        sql_command = 'SELECT id_use, email FROM users;'
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute(sql_command)
+        users=cur.fetchall() 
+        
+        sql_command2 = 'select groupname, id_grp from groups;'
+        cur2 = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur2.execute(sql_command2)
+        groups=cur2.fetchall() 
+    
+        return render_template('add_grp_mem.html', active_menu='add_grp_mem', mem=mem, login=login, users=users, groups=groups)
     else: 
-        mem['user_id'] = '' if not 'user_id' in request.form else request.form['user_id']
-        mem['group_id'] = '' if not 'group_id' in request.form else request.form['group_id']
+        mem['email'] = '' if not 'email' in request.form else request.form['email']
+        mem['groupname'] = '' if not 'groupname' in request.form else request.form['groupname']
         cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
     
-        if mem['user_id'] == '':
+        cur.execute('select count(*) as cnt from users where email = %s',[mem['email']])
+        record = cur.fetchone()
+        is_email_walid = (record['cnt'] == 1)
+
+        cur.execute('select count(*) as cnt from groups where groupname = %s',[mem['groupname']])
+        record = cur.fetchone()
+        is_group_walid = (record['cnt'] == 1) 
+
+        if mem['email'] == '':
             message = 'user id cannot be empty'  
-        elif mem['group_id'] == '':
-            message = 'group id cannot be empty'     
-    
+        elif mem['groupname'] == '':
+            message = 'group id cannot be empty'
+        elif not is_email_walid:
+            message = 'Nie ma usera o nazawie {} w bazie danych'.format(mem['email'])
+        elif not is_group_walid:
+            message = 'Nie ma grupy o nazwie {} w bazie danych'.format(mem['groupname'])     
+
         if not message:
-            sql_statement = '''INSERT INTO group_members ( user_id, group_id) VALUES(%s,%s);'''
-            cur.execute(sql_statement, [ mem['user_id'], mem['group_id'] ]) 
+            sql_statement = '''INSERT INTO "group_members" ("user_id", "group_id") VALUES ( (SELECT "id_use" FROM "users" WHERE "email" = %s), (SELECT "id_grp" FROM "groups" WHERE "groupname" = %s)); '''
+            cur.execute(sql_statement, [ mem['email'], mem['groupname'] ]) 
             db.commit()
-            flash('Add user {} to group'.format(mem['user_id']))
-            return redirect(url_for('groups'))
-        
+            flash('Dodano uzytkownika do {} do grupy'.format(mem['email']))
+            return redirect(url_for('groups'))        
         else:
             flash('Correct error: {}'.format(message))
             return render_template('add_grp_mem.html', active_menu='add_grp_mem', mem=mem, login=login)
@@ -718,8 +735,8 @@ def admin_bugs():
 
     login = UserPass(session.get('user'))
     login.get_user_info()
-    if not login.is_valid or not login.is_admin:
-        flash(f'Użytkownik {login.user} nie jest adminem')
+    if not login.is_valid or not (login.is_admin or login.is_cyber):
+        flash(f'Użytkownik {login.user} nie jest adminem bądź oficerem bezpieczenstwa')
         return redirect(url_for('login')) 
 
 
@@ -736,8 +753,8 @@ def bug_delete(id_bug):
     
     login = UserPass(session.get('user'))
     login.get_user_info()
-    if not login.is_valid or not login.is_admin:
-        flash(f'Użytkownik {login.user} nie jest adminem')
+    if not login.is_valid or not login.is_cyber:
+        flash(f'Użytkownik {login.user} nie jest oficerem bezpieczenstawa')
         return redirect(url_for('login'))   
 
     db=get_db()
