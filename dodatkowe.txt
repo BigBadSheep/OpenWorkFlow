@@ -13,11 +13,12 @@ AS "Length of a String";
 
 CREATE TABLE "users" (
 	"id_use" serial NOT NULL,
-	"username" varchar(255) NOT NULL,
+	"username" varchar(255) NOT NULL UNIQUE,
 	"password" varchar(255) NOT NULL,
-	"email" varchar(255) NOT NULL,
-	"admin" BOOLEAN NOT NULL,
-	"active" BOOLEAN NOT NULL,
+	"email" varchar(255) NOT NULL UNIQUE,
+	"is_admin" BOOLEAN NOT NULL,
+	"is_active" BOOLEAN NOT NULL,
+	"is_cyber" BOOLEAN NOT NULL,
 	CONSTRAINT "users_pk" PRIMARY KEY ("id_use")
 ) WITH (
   OIDS=FALSE
@@ -50,8 +51,8 @@ CREATE TABLE "files" (
 
 CREATE TABLE "flow" (
 	"id_flo" serial NOT NULL,
-	"flowname" varchar(255) NOT NULL,
-	"flowdescription" TEXT NOT NULL,
+	"flowname" varchar(25) NOT NULL,
+	"flowdescription" varchar(100) NOT NULL,
 	"file_id" int NOT NULL,
 	"number" integer NOT NULL,
 	"status" BOOLEAN NOT NULL,
@@ -83,7 +84,9 @@ CREATE TABLE "group_members" (
   OIDS=FALSE
 );
 
-CREATE TABLE "public.bugs" (
+
+
+CREATE TABLE "bugs" (
 	"id_bug" serial NOT NULL,
 	"name" VARCHAR(255) NOT NULL,
 	"description" VARCHAR(255) NOT NULL,
@@ -94,21 +97,17 @@ CREATE TABLE "public.bugs" (
 
 
 ALTER TABLE "files" ADD CONSTRAINT "files_fk0" FOREIGN KEY ("uploder") REFERENCES "users"("id_use");
-
 ALTER TABLE "flow" ADD CONSTRAINT "flow_fk0" FOREIGN KEY ("file_id") REFERENCES "files"("id_fil");
-
 ALTER TABLE "approval_table" ADD CONSTRAINT "approval_table_fk0" FOREIGN KEY ("flow_id") REFERENCES "flow"("id_flo");
 ALTER TABLE "approval_table" ADD CONSTRAINT "approval_table_fk1" FOREIGN KEY ("group_id") REFERENCES "groups"("id_grp");
-
 ALTER TABLE "group_members" ADD CONSTRAINT "group_members_fk0" FOREIGN KEY ("user_id") REFERENCES "users"("id_use");
 ALTER TABLE "group_members" ADD CONSTRAINT "group_members_fk1" FOREIGN KEY ("group_id") REFERENCES "groups"("id_grp");
 
-
 -- Insert data into "users" table
 INSERT INTO users (username, password, email, is_admin, is_active) VALUES
-  ('user1', 'password1', 'user1@example.com', false, true),
-  ('admin', 'adminpassword', 'admin@example.com', true, true),
-  ('user2', 'password2', 'user2@example.com', false, true);
+  ('user1', 'password1', 'user1@example.com', false, true, faslse),
+  ('admin', 'adminpassword', 'admin@example.com', true, true, faslse),
+  ('user2', 'password2', 'user2@example.com', false, faslse, true);
 
 -- Insert data into "groups" table
 INSERT INTO groups (groupname, groupdescription) VALUES
@@ -145,29 +144,6 @@ FROM flow f
 INNER JOIN files fl ON f.file_id = fl.id_fil;
 select id_use, username, email, is_admin, is_active from users;
 
-
-
-create table users (id integer primary key autoincrement, name varchar(100) not null unique, email varchar(100) not null unique, password test, is_active 
-booolen not null default 0, is_admin boolean not null default 0);
-
-create table transactions (id integer primary key autoincrement, currency varchar (5), amount int, user varchar(30), trans_date not null default(date()));
-
-create table users (
-    id serial primary key,
-    name varchar(100) not null unique,
-    email varchar(100) not null unique,
-    password varchar(100) not null,
-    is_active boolean not null default false,
-    is_admin boolean not null default false
-);
-
-create table transactions (
-    id serial primary key,
-    currency varchar(5),
-    amount int,
-    user_id integer references users(id),
-    trans_date timestamp not null default current_timestamp
-);
 
 CREATE USER WorkFlow WITH PASSWORD 'password';
 
