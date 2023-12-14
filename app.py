@@ -162,12 +162,7 @@ class UserPass:
 
 @app.route('/users')
 def users():
-    # Check if user is logged in and is an admin
-    #login = UserPass(session.get('user'))
-    #login.get_user_info()
-    #if not login.is_valid or not login.is_admin:
-    #    flash(f'Użytkownik {login.user} nie jest adminem')
-    #    return redirect(url_for('login'))
+
     login = UserPass(session.get('user'))
     login.get_user_info()
     if not login.is_valid:
@@ -246,6 +241,44 @@ def edit_user(user_name):
             flash('Password was changed')
 
         return redirect(url_for('users'))
+    
+@app.route('/self_edit_user', methods=['GET', 'POST'])
+def self_edit_user():
+
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid:
+        flash(f'Użytkownik {login.user} nie aktywny')
+        return redirect(url_for('login'))
+
+    db = get_db()
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute('select username, email from users where username = %s', [login.user])
+    user = cur.fetchone()
+
+    if request.method == 'GET':
+        return render_template('self_edit_user.html', active_menu='users', user=user, login=login)
+    else:
+        new_email = '' if 'email' not in request.form else request.form["email"]
+        new_password = '' if 'user_pass' not in request.form else request.form['user_pass']
+        password2 = '' if 'user_pass2' not in request.form else request.form['user_pass2']
+
+        if new_email == user['email']:          
+            if new_password != '':
+                if new_password == password2:
+                    user_pass = UserPass(login.user, new_password)
+                    sql_statement = "update users set password = %s where username = %s"
+                    cur.execute(sql_statement, [user_pass.hash_password(), login.user])
+                    db.commit()
+                    flash('Password was changed')
+                else:
+                    flash('Hasła nie są takie same')           
+            else:
+                flash('Nie podano nowego hasła')    
+        else:
+            flash('Nie możesz zmienić hasła dla innego użytownika')    
+
+        return redirect(url_for('users'))    
 
 @app.route('/user_delete/<user_name>')
 def delete_user(user_name):

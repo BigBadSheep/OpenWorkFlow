@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html> 
+    <head>
+        <title> edit-user </title>
+        <meta charset="="utf-8">
+    </head>
+    <body>
+        <h1> edycja użytkownika {{ user.name }}</h1>
+        <form id="user_form" action="{{ url_for('self_edit_user', user_name=user.username) }}" method="POST">
+            <label> email </label><input type="text" id="email" name="email" value="{{user.email}}"> <br>
+            <label> password</label><input type="password" id="user_pass" name="user_pass"> <br> 
+            <label> powtórz password</label><input type="password2" id="user_pass2" name="user_pass2"> <br> 
+            <input type="submit"  value="Send"> <br>
+        </form>
+</body>
