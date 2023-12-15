@@ -9,8 +9,23 @@
         <div> <p style="color:red">  {{message }} </p> </div>
         {%endfor%}
         <form id="add_group_flow" action="{{ url_for('add_group_flow') }}" method="POST">
-            <label> flow id </label> <input type="text" id="flow_id" name="flow_id" >  <br>
-            <label> group id </label> <input type="text" id="group_id" name="group_id" >  <br>
+            <label> flow </label>   
+            <input list="flow_idb" name="flow_id" id="flow_id">
+            <datalist id="flow_idb">
+                {% for flow in flows %}
+                <option value="{{ flow.flowname }}">
+                {% endfor %}    
+            </datalist>
+            <br>
+            <label> grupa </label> 
+            <input list="group_idb" name="group_id" id="group_id">
+            <datalist id="group_idb">
+                {% for group in groups %}
+                <option value="{{ group.groupname }}">
+                {% endfor %}    
+            </datalist>
+
+            <br>
             <label> value </label> <input type="number" id="value" name="value" >  <br>
             <input type="submit"  value="Send"> <br>
         </form>

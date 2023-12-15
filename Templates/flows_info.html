@@ -8,26 +8,28 @@
  <th >#</th>
  <th >Flowname</th>
  <th >Flowdescription</th>
- <th >File_name</th>
+ <th >Plik</th>
  <th >Number</th>
  <th >Status</th>
  <th >Actions</th>
  </tr>
  </thead>
  <tbody>
- {% for flow in flows %}
- <tr>
- <th scope="row">{{ flow.id_flo }}</th>
- <td>{{ flow.flowname }}</td>
- <td>{{ flow.flowdescription }}</td>
- <td> {{ flow.file_name }} </td>
- <td> {{ flow.number }} </td>
- <td> {{ flow.status }}  </td>
- <td>
-  <a href="{{ url_for('flow_info', id_flo=flow.id_flo) }}" role="button">More info</a>
-   </td>
- </tr>
- {%endfor%}
+  {% for flow in flows %}
+  <tr>
+  <th scope="row">{{ flow.id_flo }}</th>
+  <td>{{ flow.flowname }}</td>
+  <td>{{ flow.flowdescription }}</td>
+  <td> 
+     <a href="{{ url_for('download_secret_file', name= flow.file_name ) }}" role="button"> {{ flow.file_name }} </a> 
+ </td>
+  <td> {{ flow.number }} </td>
+  <td> {{ flow.status }}  </td>
+  <td>
+    <a href="{{ url_for('flow_info', id_flo=flow.id_flo) }}" role="button">More info</a>
+    </td>
+  </tr>
+  {%endfor%}
  </tbody>
  </table>
 <br> <br>

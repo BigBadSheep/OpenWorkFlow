@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html> 
+    <head>
+        <title> Dodaj plik </title>
+        <meta charset="="utf-8>
+    </head>
+    <body>
+        {% for message in get_flashed_messages() %}
+        <div> <p style="color:red">  {{message }} </p> </div>
+        {%endfor%}
+        <title> Dodaj plik do systemu </title>
+        <form id="add_file" action="{{ url_for('add_file') }}" method="POST" enctype=multipart/form-data>
+            <label> filename </label> <input type="text" id="publicfilename" name="publicfilename" >  <br>
+            <input type=file name=file><br>
+            <input type="submit"  value="Send"> 
+        </form>
+</body>

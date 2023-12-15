@@ -1,14 +1,13 @@
-from flask import Flask, render_template, request, g, redirect, url_for, flash, session
+from flask import Flask, render_template, request, g, redirect, url_for, flash, session, send_from_directory
 import psycopg2
 import hashlib
 import binascii
 import random
 import string
 import psycopg2.extras
-
+import time
 import os
 from werkzeug.utils import secure_filename
-from flask import send_from_directory
 
 app = Flask(__name__, template_folder='Templates')
 
@@ -37,7 +36,9 @@ def close_db(error):
     if hasattr(g, 'db'):
         g.db.close()
 
-@app.route('/init_app')
+#zaznaczone funckje pochodzą częściwo z poradnika Python Flask - aplikacje webowe - kurs z podręcznikiem PDF autorstwa Rafał Mobilo dostępnego pod linkiem https://www.udemy.com/course/python-flask-aplikacje-webowe/
+
+@app.route('/init_app') #funckja częściwo zaczerpnięta z prodnika
 def init_app():
     db = get_db()
     cur = db.cursor()
@@ -54,15 +55,15 @@ def init_app():
     user_pass = UserPass()
     user_pass.get_random_user_password()
     username = user_pass.user[:100]  # truncate the name to 100 characters
-    email = 'noone@nowhere.no'
+    email = 'admin@admin.notmail'
     password = user_pass.hash_password()
-    sql_statement = "INSERT INTO users (username, email, password, is_active, is_admin) VALUES (%s, %s, %s, %s, %s)"
-    cur.execute(sql_statement, [username, email, password, True, True])
+    sql_statement = "INSERT INTO users (username, email, password, is_active, is_admin, is_cyber) VALUES (%s, %s, %s, %s, %s, %s)"
+    cur.execute(sql_statement, [username, email, password, True, True, False])
     db.commit()
     flash('User {} with password {} has been created'.format(user_pass.user, user_pass.password))
     return redirect(url_for('index'))
 
-@app.route('/login', methods=['GET','POST'])
+@app.route('/login', methods=['GET','POST']) #funckja częściwo zaczerpnięta z prodnika
 def login():
 
     login = UserPass(session.get('user'))
@@ -85,8 +86,8 @@ def login():
         flash('Logon failed, try again')
         return render_template('login.html')
 
-@app.route('/logout')
-def logout():
+@app.route('/logout') #funckja częściwo zaczerpnięta z prodnika
+def logout(): #funckja częściwo zaczerpnięta z prodnika
 
     if 'user' in session:
         session.pop('user', None)
@@ -160,7 +161,7 @@ class UserPass:
             self.is_cyber = db_user['is_cyber']
             self.email = db_user['email']       
 
-@app.route('/users')
+@app.route('/users') #funckja częściwo zaczerpnięta z prodnika
 def users():
 
     login = UserPass(session.get('user'))
@@ -171,14 +172,14 @@ def users():
 
 
     db = get_db()
-    sql_command = 'select id_use, username, email, is_admin, is_active from users;'
+    sql_command = 'select id_use, username, email, is_admin, is_active, is_cyber from users;'
     cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute(sql_command)
     users=cur.fetchall()
 
     return render_template('users.html', active_menu='users', users=users, login=login)
 
-@app.route('/user_status_change/<action>/<user_name>')
+@app.route('/user_status_change/<action>/<user_name>') #funckja częściwo zaczerpnięta z prodnika
 def user_status_change(action, user_name):
 
     # app.py – code to add to functions – admin access
@@ -203,7 +204,7 @@ def user_status_change(action, user_name):
 
     return redirect(url_for('users'))
 
-@app.route('/edit_user/<user_name>', methods=['GET', 'POST'])
+@app.route('/edit_user/<user_name>', methods=['GET', 'POST']) #funckja częściwo zaczerpnięta z prodnika
 def edit_user(user_name):
 
     login = UserPass(session.get('user'))
@@ -280,7 +281,7 @@ def self_edit_user():
 
         return redirect(url_for('users'))    
 
-@app.route('/user_delete/<user_name>')
+@app.route('/user_delete/<user_name>') #funckja częściwo zaczerpnięta z prodnika
 def delete_user(user_name):
     
     login = UserPass(session.get('user'))
@@ -300,7 +301,7 @@ def delete_user(user_name):
     db.commit()
     return redirect(url_for('users'))
 
-@app.route('/new_user', methods=['GET', 'POST'])
+@app.route('/new_user', methods=['GET', 'POST']) #funckja częściwo zaczerpnięta z prodnika
 def new_user():
     
     login = UserPass(session.get('user'))
@@ -410,7 +411,7 @@ def workflows():
 
     return render_template('flows.html', active_menu='users', flows=flows, login=login)
 
-@app.route('/user_workflows', methods=['GET', 'POST'])
+@app.route('/user_workflows', methods=['GET', 'POST']) #to bedzie funckja ktora bedzie pokzaywac userowi tylko te workflowy ktore sa dla niego, ale raczej lepiej rozbudwaoc /workflows
 def user_workflows():
     login = UserPass(session.get('user'))
     login.get_user_info()
@@ -420,7 +421,7 @@ def user_workflows():
 
 
     db = get_db()
-    sql_command = 'SELECT f.id_flo, f.flowname, f.flowdescription, fl.filename AS file_name, f.number, f.status FROM flow f INNER JOIN files fl ON f.id_fil = fl.id_fil;'
+    sql_command = 'SELECT f.id_flo, f.flowname, f.flowdescription, fl.filename AS file_name, f.number, f.status FROM flow f INNER JOIN files fl ON f.file_id = fl.id_fil;'
     cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute(sql_command)
     flows=cur.fetchall() 
@@ -428,7 +429,7 @@ def user_workflows():
     return render_template('flows.html', active_menu='users', flows=flows, login=login)
 
 
-@app.route('/flow_info/<id_flo>', methods=['GET', 'POST'])
+@app.route('/flow_info/<id_flo>', methods=['GET', 'POST']) 
 def flow_info(id_flo):
     login = UserPass(session.get('user'))
     login.get_user_info()
@@ -467,39 +468,29 @@ def add_flow():
     flow = {}
 
     if request.method == 'GET':
-        return render_template('new_flow.html', active_menu='new_flow', flow=flow, login=login)
+        
+        sql_command = 'SELECT id_fil, filename FROM files;'
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute(sql_command)
+        files=cur.fetchall() 
+        
+        return render_template('new_flow.html', active_menu='new_flow', flow=flow, login=login, files=files)
     else:
         flow['flow_name'] = '' if not 'flow_name' in request.form else request.form['flow_name']
         flow['flowdescription'] = '' if not 'flowdescription' in request.form else request.form['flowdescription']
+        flow['filename'] = '' if not 'filename' in request.form else request.form['filename']
         cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)        
-        
-        file = request.files['file']
-        if file.filename == '':
-            flash('No selected file')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            flash('dodano plik')
-
-        
+                
         if flow['flow_name'] == '':
             message = 'flow_name cannot be empty'
         elif flow['flowdescription'] == '':
             message = 'flowdescription cannot be empty'
+        elif flow['filename'] == '':
+            message = 'filename cannot be empty'    
     
         if not message:
-            sql_statement = '''INSERT INTO files (filename,filepath ,uploder) VALUES(%s,%s,%s);'''
-            cur.execute(sql_statement, [ filename,"cos" ,1 ]) #jedne do zmiany na id usera
-            db.commit()
-            flash('Flow {} upolded'.format(filename))
-
-            sql_statement = '''INSERT INTO flow (flowname, flowdescription, file_id, number, status) VALUES(%s,%s,1, 0, false);'''
-            cur.execute(sql_statement, [ flow['flow_name'], flow['flowdescription'] ])    
+            sql_statement = '''INSERT INTO flow (flowname, flowdescription, file_id, number, status) VALUES  ( %s, %s, ( SELECT f.id_fil FROM public.files f WHERE f.filename = %s LIMIT 1), 0, FALSE );'''
+            cur.execute(sql_statement, [ flow['flow_name'], flow['flowdescription'], flow['filename'] ])    
             db.commit()
             flash('Flow {} created'.format(flow['flow_name']))
 
@@ -670,25 +661,44 @@ def add_group_flow():
     db = get_db()
     message = None
     grop_add = {}
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     if request.method == 'GET':
-        return render_template('add_grp_flow.html', active_menu='add_grp_mem', grop_add=grop_add, login=login)
+        
+        sql_command = 'SELECT id_grp, groupname FROM groups;'
+        cur.execute(sql_command)
+        groups=cur.fetchall()
+
+        sql_command = 'SELECT id_flo, flowname FROM flow;'
+        cur.execute(sql_command)
+        flows=cur.fetchall()  
+        
+        return render_template('add_grp_flow.html', active_menu='add_grp_flow', flows=flows, login=login, groups=groups)
     else: 
         grop_add['flow_id'] = '' if not 'flow_id' in request.form else request.form['flow_id']
         grop_add['group_id'] = '' if not 'group_id' in request.form else request.form['group_id']
         grop_add['value'] = '' if not 'value' in request.form else request.form['value']
-        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
     
         if grop_add['flow_id'] == '':
             message = 'flow is cannot be empty'  
         elif grop_add['group_id'] == '':
             message = 'group id cannot be empty'
         elif grop_add['value'] == '':
-            message = 'value id cannot be empty'            
+            message = 'value id cannot be empty'     #trzeba sprawdzic czy taka wrtosc jest wolna dla danego flow       
     
         if not message:
-            sql_statement = '''INSERT INTO approval_table ( flow_id, group_id, value) VALUES(%s,%s,%s);'''
-            cur.execute(sql_statement, [ grop_add['flow_id'], grop_add['group_id'], grop_add['value'] ]) 
+            sql_statement = '''
+    INSERT INTO approval_table (flow_id, group_id, value) 
+    SELECT f.id_flo, g.id_grp, %s 
+    FROM public.flow f 
+    JOIN public.groups g ON f.flowname = %s 
+    WHERE g.groupname = %s 
+    AND NOT EXISTS (
+        SELECT 1 FROM public.approval_table at 
+        WHERE at.flow_id = f.id_flo AND at.group_id = g.id_grp
+    );
+'''
+            cur.execute(sql_statement, [ grop_add['value'], grop_add['flow_id'], grop_add['group_id'] ]) 
             db.commit()
             flash('Add group {} to flow'.format(grop_add['group_id']))
             return redirect(url_for('workflows'))
@@ -697,40 +707,6 @@ def add_group_flow():
             flash('Correct error: {}'.format(message))
             return render_template('add_grp_flow.html', active_menu='add_grp_mem', grop_add=grop_add, login=login)
 
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-@app.route('/upolad', methods=['GET', 'POST'])
-def upload_file():
-    if request.method == 'POST':
-        # check if the post request has the file part
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        # If the user does not select a file, the browser submits an
-        # empty file without a filename.
-        if file.filename == '':
-            flash('No selected file')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(url_for('download_file', name=filename))
-    return '''
-    <!doctype html>
-    <title>Upload new File</title>
-    <h1>Upload new File</h1>
-    <form method=post enctype=multipart/form-data>
-      <input type=file name=file>
-      <input type=submit value=Upload>
-    </form>
-    '''        
-
-@app.route('/uploads/<name>')
-def download_file(name):
-    return send_from_directory(app.config["UPLOAD_FOLDER"], name)
 
 @app.route('/new_bugs', methods=['GET', 'POST'])
 def new_bugs():
@@ -796,3 +772,103 @@ def bug_delete(id_bug):
     cur.execute(sql_statement, [id_bug])
     db.commit()
     return redirect(url_for('admin_bugs'))
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    
+
+@app.route('/uploads/<name>')
+def download_file(name):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], name)
+
+@app.route('/uploads_secret/<name>')
+def download_secret_file(name):
+
+    db = get_db()
+    sql_statement = 'select filepath from files where filename=%s;'
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(sql_statement, [name])
+    result = cur.fetchone()
+
+    if result is not None:
+        file_path = result[0]
+        return download_file(file_path)
+    else:
+        return "File not found", 404
+
+
+@app.route('/add_file', methods=['GET', 'POST'])
+def add_file():
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid:
+        flash(f'Użytkownik {login.user} nie aktywny')
+        return redirect(url_for('login'))
+
+    db = get_db()
+    message = None
+    data = {}
+
+    if request.method == 'GET':
+        return render_template('add_file.html', active_menu='new_file', data=data, login=login)
+    else:
+        data['publicfilename'] = '' if not 'publicfilename' in request.form else request.form['publicfilename']
+
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute('select count(*) as cnt from files where filename = %s',[data['publicfilename']])
+        record = cur.fetchone()
+        is_filename_unique = (record['cnt'] == 0)
+
+        if data['publicfilename'] == '':
+            message = 'publicfilename cannot be empty'
+        elif not is_filename_unique:
+            message = 'file name {} już taki jest'.format(data['publicfilename'])    
+
+        if not message:
+            if 'file' not in request.files:
+                flash('No file part')
+                return redirect(request.url)
+            file = request.files['file']
+
+            if file.filename == '':
+                flash('No selected file')
+                return redirect(request.url)
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                secretfilename = str(time.time()+14123)+filename
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], secretfilename))
+
+
+                cur.execute('SELECT id_use FROM users where username=%s',[login.user])
+                result = cur.fetchone()
+                if result is not None:
+                    user_id = result[0]
+                
+                sql_statement2 = '''INSERT INTO files (filename, filepath, uploder) VALUES(%s,%s,%s);'''
+                cur.execute(sql_statement2,[ data['publicfilename'], secretfilename, user_id ])
+                db.commit()
+                flash('Plik {} upolded'.format(file))
+                #return redirect(url_for('download_file', name=filename))
+            return redirect(url_for('main'))
+        else:
+            flash('Correct error: {}'.format(message))
+            return render_template('add_file.html', active_menu='new_file', data=data, login=login)
+
+@app.route('/files')
+def files():
+
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
+        return redirect(url_for('login'))   
+
+
+    db = get_db()
+    sql_command = 'select filename, filepath, username from files INNER JOIN users ON users.id_use = files.uploder;'
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(sql_command)
+    files=cur.fetchall()
+
+    return render_template('files.html', files=files, login=login)

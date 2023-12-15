@@ -8,12 +8,24 @@
         {% for message in get_flashed_messages() %}
         <div> <p style="color:red">  {{message }} </p> </div>
         {%endfor%}
-        <form id="flow_form" action="{{url_for('add_flow')}}" method="POST" enctype=multipart/form-data> 
+
+        <form id="flow_form" action="{{ url_for('add_flow') }}" method="POST" enctype=multipart/form-data>
+            
             <label> flow name </label> <input type="text" id="flow_name" name="flow_name" >  <br>
             <label> flowdescription </label><input type="text" id="flowdescription" name="flowdescription"> <br>
-            <input type=file name=file>
-            <!--<label> file name</label><input type="text" id="file_name" name="file_name"> <br>-->
-            <!--<label> file path</label><input type="text" id="file_path" name="file_path"> <br>-->
+
+            <label> plik </label>           
+            <input list="filenameb" name="filename" id="filename">
+            <datalist id="filenameb">
+                {% for file in files %}
+                <option value="{{ file.filename }}">
+                {% endfor %}    
+            </datalist>
+             <br>
+            <!--  <label> group_id </label> <input type="text" id="group_id" name="group_id" >  <br> !-->
+            
+            <br>
             <input type="submit"  value="Send"> <br>
         </form>
+
 </body>

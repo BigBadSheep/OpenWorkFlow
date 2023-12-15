@@ -8,7 +8,7 @@
  <th >#</th>
  <th >Flowname</th>
  <th >Flowdescription</th>
- <th >File_name</th>
+ <th >Plik</th>
  <th >Number</th>
  <th >Status</th>
  <th >Actions</th>
@@ -20,7 +20,9 @@
  <th scope="row">{{ flow.id_flo }}</th>
  <td>{{ flow.flowname }}</td>
  <td>{{ flow.flowdescription }}</td>
- <td> {{ flow.file_name }} </td>
+ <td> 
+    <a href="{{ url_for('download_secret_file', name= flow.file_name ) }}" role="button"> {{ flow.file_name }} </a> 
+</td>
  <td> {{ flow.number }} </td>
  <td> {{ flow.status }}  </td>
  <td>

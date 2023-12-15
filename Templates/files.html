@@ -1,0 +1,207 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Edit Users</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('https://scontent-waw1-1.xx.fbcdn.net/v/t1.15752-9/393982217_378995091131028_1858520123515179774_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=8cd0a2&_nc_ohc=1IWNuqyCjZwAX_Sgvd1&_nc_ht=scontent-waw1-1.xx&oh=03_AdQhB4IhOqDqyKDKmPoVNTueJKlaRz3cFzVYEWWacB-Yvw&oe=65840444');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+        }
+
+        h1 {
+            background-color: #5a9c65;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #406b46;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        #sidebar a {
+            padding: 15px 8px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #ffffff;
+            display: block;
+            transition: 0.3s;
+        }
+
+        #sidebar a:hover {
+            color: #5a9c65;
+        }
+
+        #sidebar .close-btn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 30px;
+            margin-left: 50px;
+            cursor: pointer;
+        }
+
+        #content {
+            transition: margin-left .5s;
+            padding: 16px;
+            margin-left: 0;
+        }
+
+        .welcome-message {
+            color: #ee6767;
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #openBtn {
+            font-size: 30px;
+            cursor: pointer;
+            position: fixed;
+            top: 50%;
+            left: 0;
+            margin-top: -15px;
+            padding: 15px;
+            background-color: #406b46;
+            color: #ffffff;
+            z-index: 2;
+            transition: left 0.5s;
+        }
+
+        #userWelcome {
+            color: #303030;
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .container {
+            background-color: #fff;
+            width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        table {
+            width: 100%;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #5a9c65;
+            color: #fff;
+        }
+
+        .btn-back {
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .fa-user,
+        .fa-lock,
+        .fa-sign-in-alt {
+            margin-right: 10px;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        a:hover {
+            color: inherit;
+        }
+
+        #sidebar a.settings {
+            font-weight: bold;
+            background-color: #5a9c65;
+            color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    {% for message in get_flashed_messages() %}
+    <div> <p style="color:red">  {{message }} </p> </div>
+    {%endfor%}
+    <!-- usuniety sitebar-->
+
+    <div id="content">
+        <div id="openBtn" onclick="toggleNav()">☰</div>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div id="userWelcome">
+                Witaj,
+            </div>
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('logout') }}">Wyloguj</a>
+                </li>
+            </ul>
+        </nav>
+
+        <h1>Edit Users</h1>
+        <div class="container">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>filename</th>
+                        <th>filepath</th>
+                        <th>uploder</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                    {% for file in files %}
+
+                        <td>{{ file.filename }}</td>
+                        <td> 
+                            <a href="{{ url_for('download_file', name= file.filepath ) }}" role="button"> {{ file.filepath }} </a> 
+                        </td>
+                        <td>{{ file.username }}</td>
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+
+        </div>
+    </div>
+
+    <!-- usnięty skrypt-->
+</body>
+
+</html>
