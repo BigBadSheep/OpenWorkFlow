@@ -221,10 +221,12 @@
     <div id="sidebar">
         <div class="close-btn" onclick="closeNav()">×</div>
         <a href="{{ url_for('new_user') }}" class="settings">Rejestracja użytkowników</a>
-        <a href="{{ url_for('admin_upload') }}">Prześlij nowy dokument</a>
-        <a href="{{ url_for('admin_docks') }}">Twoje dokumenty</a>
+        <a href="{{ url_for('new_grp') }}" >Dodawanie nowej grupy</a>
+        <a href="{{ url_for('new_flow') }}">Prześlij nowy dokument</a>
+        <a href="{{ url_for('flows') }}">Twoje dokumenty</a>
         <a href="{{ url_for('admin_bugs') }}">Zgłoszenia użytkowników</a>
-        <a href="{{ url_for('admin_edit_user') }}">Zarządzanie użytkownikami</a>
+        <a href="{{ url_for('users') }}">Zarządzanie użytkownikami</a>
+        <a href="{{ url_for('groups') }}">Zarządzanie grupami</a>
         <a href="{{ url_for('admin_settings') }}">Ustawienia</a>
     </div>
 
@@ -237,15 +239,15 @@
                 </li>
             </ul>
         </nav>
-        <h1>New User</h1>
+        <h1>Rejestracja nowego użytkownika</h1>
 
         <form id="user_form" action="{{url_for('new_user')}}" method="POST"> 
-            <label> user name </label> <input type="text" id="user_name" name="user_name" value="{{user.user_name}}">  <br>
-            <label> email </label><input type="text" id="email" name="email" value="{{user.email}}"> <br>
-            <label> password</label><input type="password" id="user_pass" name="user_pass" value="{{user.password}}"> <br>
+            <label> Nazwa użytkownika </label> <input type="text" id="user_name" name="user_name" value="{{user.user_name}}">  <br>
+            <label> Adres e-mail </label><input type="text" id="email" name="email" value="{{user.email}}"> <br>
+            <label> Hasło </label><input type="password" id="user_pass" name="user_pass" value="{{user.password}}"> <br>
 
         
-            <button type="submit" class="btn btn-primary">Send <i class="fas fa-sign-in-alt"></i></button>
+            <button type="submit" class="btn btn-primary">Zapisz <i class="fas fa-sign-in-alt"></i></button>
         </form>
     </div>
 
