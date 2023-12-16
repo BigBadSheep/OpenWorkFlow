@@ -188,7 +188,7 @@
 
                         <td>{{ file.filename }}</td>
                         <td> 
-                            <a href="{{ url_for('download_file', name= file.filepath ) }}" role="button"> {{ file.filepath }} </a> 
+                            <a href="{{ url_for('download_file', name= file.filepath ) }}" role="button" target="_blank"> {{ file.filepath }} </a> 
                         </td>
                         <td>{{ file.username }}</td>
 
