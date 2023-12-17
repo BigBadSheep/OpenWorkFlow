@@ -1198,4 +1198,4 @@ def aprove(id_flo):
             return redirect(url_for('main'))
         else:
             flash('Correct error: {}'.format(message))
-            return render_template('new_bugs.html', active_menu='new_bugs', action=action, login=login)
+            return render_template('flows_info_new.html', flows=flows, login=login, approvals=approvals, action=action)

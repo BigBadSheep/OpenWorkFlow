@@ -30,8 +30,8 @@
   <td> {{ false_flow.status }}  </td>
   <td> {{ false_flow.description }}  </td>
   <td>
-    <a href="{{ url_for('flow_info', id_flo=false_flow.id_flo) }}" role="button">More info</a>
-    </td>
+    <a href="{{ url_for('flow_info', id_flo=false_flow.flow_id) }}" role="button">Więcej informacji</a>
+  </td>
   </tr>
   {%endfor%}
 </tbody>
@@ -54,7 +54,7 @@
   
   {% for true_flow in true_flows %}
   <tr>
-  <th scope="row">{{ true_flow.id_flo }}</th>
+  <th scope="row">{{ true_flow.flow_id }}</th>
   <td>{{ true_flow.flowname }}</td>
   <td>{{ true_flow.flowdescription }}</td>
   <td> 
@@ -62,8 +62,8 @@
  </td>
   <td> {{ true_flow.groupname }} </td>
   <td>
-    <a href="{{ url_for('flow_info', id_flo=true_flow.id_flo) }}" role="button">More info</a>
-    </td>
+    <a href="{{ url_for('flow_info', id_flo=true_flow.flow_id) }}" role="button">Więcej informacji</a>
+  </td>
   </tr>
   {%endfor%}
  </tbody>
