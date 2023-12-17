@@ -6,31 +6,37 @@
  <table >
  <thead>
  <tr>
+  <th> ID</th>
  <th >Flowname</th>
  <th >Flowdescription</th>
  <th >Plik</th>
  <th >Grupa do akceptacji</th>
  <th >Zakoczone</th>
  <th >Komentarz</th>
- <th >Actions</th>
+ <th >Więcej informacji</th>
+ <th >Przekaz dalej</th>
  </tr>
  </thead>
  <tbody>
-  
-  {% for false_flow in false_flows %}
   <tr>
-  <th scope="row">{{ false_flow.id_flo }}</th>
+  {% for false_flow in false_flows %}
+  
+  <th scope="row">{{ false_flow.flow_id }}</th>
   <td>{{ false_flow.flowname }}</td>
   <td>{{ false_flow.flowdescription }}</td>
   <td> 
      <a href="{{ url_for('download_secret_file', name= false_flow.filename ) }}" role="button" target="_blank"> {{ false_flow.filename }} </a>  <!-- te linki są do poprway-->
- </td>
+  </td>
   <td> {{ false_flow.groupname }} </td>
   <td> {{ false_flow.status }}  </td>
   <td> {{ false_flow.description }}  </td>
   <td>
-    <a href="{{ url_for('flow_info', id_flo=false_flow.id_flo) }}" role="button">More info</a>
-    </td>
+    <a href="{{ url_for('flow_info', id_flo=false_flow.flow_id) }}" role="button">Więcej informacji</a>
+  </td>
+  <td>
+    <a href="{{ url_for('aprove', id_flo=false_flow.flow_id) }}" role="button">Przekaz dalej</a>
+  </td>
+  
   </tr>
   {%endfor%}
 </tbody>
@@ -46,7 +52,7 @@
   <th >Flowdescription</th>
   <th >Plik</th>
   <th >Number</th>
-  <th >Actions</th>
+  <th >Więcej informacji</th>
   </tr>
   </thead>
   <tbody>
@@ -57,12 +63,12 @@
   <td>{{ true_flow.flowname }}</td>
   <td>{{ true_flow.flowdescription }}</td>
   <td> 
-     <a href="{{ url_for('download_secret_file', name= true_flow.filename ) }}" role="button" target="_blank"> {{ true_flow.filename }} </a> 
- </td>
+     <a href="{{ url_for('download_secret_file', name=true_flow.filename ) }}" role="button" target="_blank"> {{ true_flow.filename }} </a> 
+  </td>
   <td> {{ true_flow.groupname }} </td>
   <td>
-    <a href="{{ url_for('flow_info', id_flo=true_flow.id_flo) }}" role="button">More info</a>
-    </td>
+    <a href="{{ url_for('flow_info', id_flo=true_flow.id_flo) }}" role="button">Więcej informacji</a>
+  </td>
   </tr>
   {%endfor%}
  </tbody>

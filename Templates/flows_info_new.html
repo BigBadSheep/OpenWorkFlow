@@ -1,0 +1,76 @@
+{% for message in get_flashed_messages() %}
+<div> <p style="color:red">  {{message }} </p> </div>
+{%endfor%}
+<div >
+ <table >
+ <thead>
+ <tr>
+ <th >#</th>
+ <th >Flowname</th>
+ <th >Flowdescription</th>
+ <th >Plik</th>
+ <th >Number</th>
+ <th >Status</th>
+ <th >Actions</th>
+ </tr>
+ </thead>
+ <tbody>
+  {% for flow in flows %}
+  <tr>
+  <th scope="row">{{ flow.id_flo }}</th>
+  <td>{{ flow.flowname }}</td>
+  <td>{{ flow.flowdescription }}</td>
+  <td> 
+     <a href="{{ url_for('download_secret_file', name= flow.file_name ) }}" role="button"> {{ flow.file_name }} </a> 
+ </td>
+  <td> {{ flow.number }} </td>
+  <td> {{ flow.status }}  </td>
+  <td>
+    <a href="{{ url_for('flow_info', id_flo=flow.id_flo) }}" role="button">More info</a>
+    </td>
+  </tr>
+  {%endfor%}
+ </tbody>
+ </table>
+<br> <br>
+<table >
+  <thead>
+  <tr>
+  <th > Nazwa grupy</th>
+  <th > Wartość</th>
+  <th > Opis</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for approval in approvals %}
+  <tr>
+  
+  <td>
+  <a href="{{ url_for('grp_info', id_grp=approval.id_grp) }}" class="btn btn-danger btn-sm" onclick="return confirm('checesz przejsc ma do widoku grupy?');">
+    <i class="fa fa-trash"> </i> {{ approval.groupname }}
+  </a>
+</td>
+  <td>{{ approval.value }}</td>
+  <td>{{ approval.description }}</td>
+
+  </tr>
+  {%endfor%}
+  </tbody>
+  </table>
+
+   
+  <br> <br>
+  {% for flow in flows %}
+  <form id="aprove" action="{{ url_for('aprove', id_flo=flow.id_flo) }}" method="POST">
+    <label> Komentarz </label> <input type="textarea" id="komentarz" name="komentarz" >  <br>
+    <label> akceptuja / odmowa </label> <br>
+    
+    <input type="radio" name="opcja" id="option1" value="option1"> Akceptacja </input><br>
+    <input type="radio" name="opcja" id="option2" value="option2"> Odmowa </input><br>
+
+    <br>
+    <input type="submit"  value="Wyślij"> <br>
+</form>
+{%endfor%}
+
+</div>

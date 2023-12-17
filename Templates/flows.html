@@ -6,6 +6,7 @@
  <table >
  <thead>
  <tr>
+  <th> ID</th>
  <th >Flowname</th>
  <th >Flowdescription</th>
  <th >Plik</th>
@@ -16,10 +17,10 @@
  </tr>
  </thead>
  <tbody>
-  
-  {% for false_flow in false_flows %}
   <tr>
-  <th scope="row">{{ false_flow.id_flo }}</th>
+  {% for false_flow in false_flows %}
+  
+  <th scope="row">{{ false_flow.flow_id }}</th>
   <td>{{ false_flow.flowname }}</td>
   <td>{{ false_flow.flowdescription }}</td>
   <td> 

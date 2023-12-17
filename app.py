@@ -1099,8 +1099,8 @@ WHERE
 
     return render_template('my_flows.html', false_flows=false_flows, login=login, true_flows=true_flows) 
 
-@app.route('/aprove/<id_flo>')
-def aprove():
+@app.route('/aprove/<id_flo>', methods=['GET', 'POST'])
+def aprove(id_flo):
 
     login = UserPass(session.get('user'))
     login.get_user_info()
@@ -1108,13 +1108,94 @@ def aprove():
         flash(f'Użytkownik {login.user} nie aktywny')
         return redirect(url_for('login'))
 
-  
-
     db = get_db()
+    message = None
+    action = {}
     cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute('SELECT id_use FROM users where username=%s',[login.user])
-    
-    
-  
+    result = cur.fetchone()
+    if result is not None:
+        user_id = result[0]
 
-    return render_template('my_flows.html', login=login) 
+    #cur.execute(sql_command,[id_flo])
+    #infos=cur.fetchall() 
+
+
+    if request.method == 'GET':
+        sql_command = 'SELECT f.id_flo, f.flowname, f.flowdescription, fl.filename AS file_name, f.number, f.status FROM flow f INNER JOIN files fl ON f.file_id = fl.id_fil where fl.id_fil=%s;'
+        cur.execute(sql_command,[id_flo])
+        flows=cur.fetchall() 
+        
+        #sql_command2 = 'SELECT id_app, flow_id, group_id, value FROM approval_table;'
+        sql_command2 = 'SELECT g.groupname, at.value, at.description FROM public.flow f JOIN public.approval_table at ON f.id_flo = at.flow_id JOIN public.groups g ON at.group_id = g.id_grp WHERE f.id_flo = %s ORDER BY at.value ASC;'
+        
+        
+        cur.execute(sql_command2,[id_flo])
+        approvals=cur.fetchall() 
+
+        return render_template('flows_info_new.html', active_menu='users', flows=flows, login=login, approvals=approvals, action=action)
+    else:
+        action['komentarz'] = '' if not 'komentarz' in request.form else request.form['komentarz']
+        action['opcja'] = '' if not 'opcja' in request.form else request.form['opcja']
+        #option = request.form['options']
+
+        
+        if action['opcja'] == '':
+            message = 'opcja cannot be empty'
+
+        
+        
+        if not message:
+            sql_statement1 = 'SELECT at.id_app number FROM public.flow f JOIN public.approval_table at ON f.id_flo = at.flow_id JOIN public.groups g ON at.group_id = g.id_grp WHERE f.id_flo = 2 and at.value=number ORDER BY at.value ASC ;'
+            cur.execute(sql_statement1, [id_flo])
+            id_app=result = cur.fetchone()
+
+            if action['opcja']=='Akceptacja':
+                sql_statement2 = '''SELECT
+                MIN(at.value) AS next_min_greater_value
+                FROM
+                    public.flow f
+                JOIN
+                    public.approval_table at ON f.id_flo = at.flow_id
+                JOIN
+                    public.groups g ON at.group_id = g.id_grp
+                WHERE
+                    f.id_flo = %s
+                    AND at.value > f.number
+                GROUP BY
+                    g.groupname, at.description
+
+                '''
+                cur.execute(sql_statement2, [id_flo])
+                idki=result = cur.fetchone()
+                
+                if idki is None:
+                # Execute SQL statement when idki is None
+                    sql_statement1 = 'UPDATE approval_table SET description = %s WHERE id_app = %s;'
+                    cur.execute(sql_statement1, [action['komentarz'],id_app[0]])
+                    db.commit()
+                    sql_statement2 = 'UPDATE public.flow SET status = TRUE WHERE id_flo = %s;'
+                    cur.execute(sql_statement2, [id_flo])
+                    db.commit()
+                else:
+                    sql_statement1 = 'UPDATE approval_table SET description = %s WHERE id_app = %s;'
+                    cur.execute(sql_statement1, [action['komentarz'],id_app[0]])
+                    db.commit()
+                    sql_statement2 = 'UPDATE flow SET number = %s WHERE id_flo = %s;'
+                    cur.execute(sql_statement2,[idki[0], id_flo] )
+                    db.commit()
+            else:
+                sql_statement1 = 'UPDATE approval_table SET description = %s WHERE id_app = %s;'
+                cur.execute(sql_statement1, [action['komentarz'],id_app[0]])
+                db.commit()
+                sql_statement2 = 'UPDATE flow SET status = TRUE WHERE id_flo = %s;'
+                cur.execute(sql_statement2, [id_flo])
+                db.commit()
+            
+            #db.commit()
+            flash('Dokonano {} update'.format(action))
+
+            return redirect(url_for('main'))
+        else:
+            flash('Correct error: {}'.format(message))
+            return render_template('new_bugs.html', active_menu='new_bugs', action=action, login=login)
