@@ -1,0 +1,30 @@
+{% for message in get_flashed_messages() %}
+<div> <p style="color:red">  {{message }} </p> </div>
+{%endfor%}
+<div >
+  <table >
+    <thead>
+    <tr>
+    <th >#</th>
+    <th >flow_id</th>
+    <th >group_id</th>
+    <th >value</th>
+  
+    </tr>
+    </thead>
+    <tbody>
+    {% for info in infos %}
+    <tr>
+    <th scope="row">{{ info.id_app }}</th>
+    <td>{{ info.flow_id }}</td>
+    <td>{{ info.group_id }}</td>
+    <td> {{ info.value }} </td>
+  
+    </tr>
+    {%endfor%}
+    </tbody>
+    </table>
+  
+  </div>
+
+</div>
