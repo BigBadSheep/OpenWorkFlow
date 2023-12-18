@@ -19,7 +19,6 @@
             height: 100vh;
         }
 
-
         h1 {
             background-color: #5a9c65;
             color: #fff;
@@ -177,12 +176,16 @@
 <body>
   <div id="sidebar">
     <div class="close-btn" onclick="closeNav()">×</div>
-    <a href="{{ url_for('add_file') }}">Dodaj nowy dokument</a>    
-    <a href="{{ url_for('new_flow') }}">Prześlij dokument</a>
-    <a href="{{ url_for('flows') }}" class="settings">Twoje dokumenty</a>
-    <a href="{{ url_for('new_bugs') }}">Dodaj zgłoszenie</a>
-    <a href="{{ url_for('self_edit_user') }}">Ustawienia</a>
-  </div>
+    <a href="{{ url_for('new_user') }}">Rejestracja użytkowników</a>
+    <a href="{{ url_for('new_grp') }}">Dodawanie nowej grupy</a>
+    <a href="{{ url_for('admin_add_file') }}">Dodaj nowy dokument</a>
+    <a href="{{ url_for('admin_new_flow') }}"> Prześlij dokument</a>
+    <a href="{{ url_for('admin_flows') }}"class="settings">Twoje dokumenty</a>
+    <a href="{{ url_for('admin_bugs') }}">Zgłoszenia użytkowników</a>
+    <a href="{{ url_for('users') }}">Zarządzanie użytkownikami</a>
+    <a href="{{ url_for('groups') }}">Zarządzanie grupami</a>
+    <a href="{{ url_for('admin_self_edit_user') }}">Ustawienia</a>
+    </div>
 
 
     <div id="content">
@@ -270,30 +273,70 @@
            </tbody>
       </table>
     </div>
-    <script>
-      function toggleNav() {
-          var sidebar = document.getElementById("sidebar");
-          var content = document.getElementById("content");
-          var openBtn = document.getElementById("openBtn");
+
     
-          if (sidebar.style.width === "250px") {
-              closeNav();
-          } else {
-              openNav();
-          }
-      }
+    <div class="container">
+    <table >
+      <thead>
+        <tr>
+          <th > Nazwa grupy</th>
+          <th > Wartość</th>
+          <th > Opis</th>
+        </tr>
+      </thead>
+    <tbody>
+      {% for approval in approvals %}
+      <tr>
+  
+        <td>
+          <a href="{{ url_for('grp_info', id_grp=approval.id_grp) }}" class="btn btn-primary btn-sm" onclick="return confirm('checesz przejsc ma do widoku grupy?');">
+          {{ approval.groupname }}
+          </a>
+        </td>
+        <td>{{ approval.value }}</td>
+        <td>{{ approval.description }}</td>
+
+      </tr>
+      {%endfor%}
+    </tbody>
+    </table>
+    </div>
+
     
-      function openNav() {
-          document.getElementById("sidebar").style.width = "250px";
-          document.getElementById("content").style.marginLeft = "250px";
-          document.getElementById("openBtn").style.left = "250px";
+    <div class="container">
+      {% for flow in flows %}
+      <form id="aprove" action="{{ url_for('aprove', id_flo=flow.id_flo) }}" method="POST">
+        <label> Komentarz </label> <input type="textarea" id="komentarz" name="komentarz" >  <br>
+        <label> akceptuja / odmowa </label> <br>
+        <input type="radio" name="opcja" id="Akceptacja" value="Akceptacja"> Akceptacja </input><input type="radio" name="opcja" id="Odmowa" value="Odmowa"> Odmowa </input><input type="submit"  class="btn btn-primary btn-sm" value="Wyślij">
+    </form>
+    {%endfor%}
+    </div>
+  <script>
+  function toggleNav() {
+      var sidebar = document.getElementById("sidebar");
+      var content = document.getElementById("content");
+      var openBtn = document.getElementById("openBtn");
+
+      if (sidebar.style.width === "250px") {
+          closeNav();
+      } else {
+          openNav();
       }
-    
-      function closeNav() {
-          document.getElementById("sidebar").style.width = "0";
-          document.getElementById("content").style.marginLeft = "0";
-          document.getElementById("openBtn").style.left = "0";
-      }
-    </script>
+  }
+
+  function openNav() {
+      document.getElementById("sidebar").style.width = "250px";
+      document.getElementById("content").style.marginLeft = "250px";
+      document.getElementById("openBtn").style.left = "250px";
+  }
+
+  function closeNav() {
+      document.getElementById("sidebar").style.width = "0";
+      document.getElementById("content").style.marginLeft = "0";
+      document.getElementById("openBtn").style.left = "0";
+  }
+  </script>
 </body>
+
 </html>

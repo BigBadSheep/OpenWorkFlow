@@ -1,14 +1,295 @@
 <!DOCTYPE html>
-<html> 
-    <head>
-        <title> edit-user </title>
-        <meta charset="="utf-8">
-    </head>
-    <body>
-        <h1> edycja użytkownika {{ user.name }}</h1>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit User</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('https://scontent-waw1-1.xx.fbcdn.net/v/t1.15752-9/393982217_378995091131028_1858520123515179774_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=8cd0a2&_nc_ohc=1IWNuqyCjZwAX_Sgvd1&_nc_ht=scontent-waw1-1.xx&oh=03_AdQhB4IhOqDqyKDKmPoVNTueJKlaRz3cFzVYEWWacB-Yvw&oe=65840444');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+        }
+
+        h1 {
+            background-color: #5a9c65;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #406b46;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        #sidebar a {
+            padding: 15px 8px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #ffffff;
+            display: block;
+            transition: 0.3s;
+        }
+
+        #sidebar a:hover {
+            color: #5a9c65;
+        }
+
+        #sidebar .close-btn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 30px;
+            margin-left: 50px;
+            cursor: pointer;
+        }
+
+        #content {
+            transition: margin-left .5s;
+            padding: 16px;
+            margin-left: 0;
+        }
+
+        form {
+            background-color: #fff;
+            width: 400px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #303030;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        p {
+            font-size: 14px;
+            color: #888;
+        }
+
+        button[type="submit"] {
+            background-color: #5a9c65;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #406b46;
+        }
+
+        .fa-user,
+        .fa-lock,
+        .fa-sign-in-alt {
+            margin-right: 10px;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+            width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        table {
+            width: 100%;
+            background-color: #fff;
+            margin-top: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        th,
+        td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .fa-file-alt {
+            margin-right: 10px;
+        }
+
+        .btn-download {
+            color: #fff;
+            background-color: #406b46;
+            padding: 10px 15px;
+            border-radius: 3px;
+            text-decoration: none;
+        }
+
+        .btn-download:hover {
+            background-color: #5a9c65;
+        }
+
+        .btn-back {
+            text-decoration: none;
+            color: #fff;
+            background-color: #406b46;
+            padding: 10px 20px;
+            border-radius: 3px;
+            margin-bottom: 20px;
+        }
+
+        .btn-back:hover {
+            background-color: #5a9c65;
+        }
+
+        #userWelcome {
+            color: #303030;
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #logoutBtn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 18px;
+            color: #fff;
+            background-color: #406b46;
+            padding: 10px 15px;
+            border-radius: 3px;
+            text-decoration: none;
+        }
+
+        #logoutBtn:hover {
+            background-color: #5a9c65;
+        }
+
+        #openBtn {
+            font-size: 30px;
+            cursor: pointer;
+            position: fixed;
+            top: 50%;
+            left: 0;
+            margin-top: -15px;
+            padding: 15px;
+            background-color: #406b46;
+            color: #ffffff;
+            z-index: 2;
+            transition: left 0.5s;
+        }
+
+        #sidebar a.settings {
+            font-weight: bold;
+            background-color: #5a9c65;
+            color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="sidebar">
+        <div class="close-btn" onclick="closeNav()">×</div>
+        <a href="{{ url_for('new_user') }}">Rejestracja użytkowników</a>
+        <a href="{{ url_for('new_grp') }}">Dodawanie nowej grupy</a>
+        <a href="{{ url_for('admin_add_file') }}" class="settings">Dodaj nowy dokument</a>
+        <a href="{{ url_for('admin_new_flow') }}"> Prześlij dokument</a>
+        <a href="{{ url_for('admin_flows') }}">Twoje dokumenty</a>
+        <a href="{{ url_for('admin_bugs') }}">Zgłoszenia użytkowników</a>
+        <a href="{{ url_for('users') }}">Zarządzanie użytkownikami</a>
+        <a href="{{ url_for('groups') }}">Zarządzanie grupami</a>
+        <a href="{{ url_for('admin_self_edit_user') }}">Ustawienia</a>
+    </div>
+
+    <div id="content">
+        <div id="openBtn" onclick="toggleNav()">☰</div>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('logout') }}">Wyloguj</a>
+                </li>
+            </ul>
+        </nav>
+        <h1> Edycja użytkownika {{ user.name }}</h1>
+
         <form id="user_form" action="{{ url_for('edit_user', user_name=user.username) }}" method="POST">
-            <label> email </label><input type="text" id="email" name="email" value="{{user.email}}"> <br>
-            <label> password</label><input type="password" id="user_pass" name="user_pass"> <br> <p> zostawienie pustego pola spowoduje pozostwaienie obecnego hasła </p>
-            <input type="submit"  value="Send"> <br>
+            <div class="form-group">
+                <label> E-mail </label><input type="text" id="email" name="email" value="{{user.email}}"> <br>
+            </div>
+            <div class="form-group">
+                <label> Hasło </label><input type="password" id="user_pass" name="user_pass"> <br> <p style="color: #888; font-size: 14px;"> Zostawienie pustego pola spowoduje pozostawienie obecnego hasła </p>
+            </div>
+            <input type="submit" value="Zapisz"> <br>
         </form>
+
+    </div>
+
+    <script>
+        function toggleNav() {
+            var sidebar = document.getElementById("sidebar");
+            var content = document.getElementById("content");
+            var openBtn = document.getElementById("openBtn");
+
+            if (sidebar.style.width === "250px") {
+                closeNav();
+            } else {
+                openNav();
+            }
+        }
+
+        function openNav() {
+            document.getElementById("sidebar").style.width = "250px";
+            document.getElementById("content").style.marginLeft = "250px";
+            document.getElementById("openBtn").style.left = "250px";
+        }
+
+        function closeNav() {
+            document.getElementById("sidebar").style.width = "0";
+            document.getElementById("content").style.marginLeft = "0";
+            document.getElementById("openBtn").style.left = "0";
+        }
+    </script>
+
 </body>
+
+</html>

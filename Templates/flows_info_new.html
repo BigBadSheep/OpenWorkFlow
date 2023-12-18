@@ -69,3 +69,33 @@
  </tbody>
  </table>
 </div>
+
+
+<br> <br>
+<table >
+  <thead>
+  <tr>
+  <th > Nazwa grupy</th>
+  <th > Wartość</th>
+  <th > Opis</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for approval in approvals %}
+  <tr>
+  
+  <td>
+  <a href="{{ url_for('grp_info', id_grp=approval.id_grp) }}" class="btn btn-danger btn-sm" onclick="return confirm('checesz przejsc ma do widoku grupy?');">
+    <i class="fa fa-trash"> </i> {{ approval.groupname }}
+  </a>
+</td>
+  <td>{{ approval.value }}</td>
+  <td>{{ approval.description }}</td>
+
+  </tr>
+  {%endfor%}
+  </tbody>
+  </table>
+
+
+</div>

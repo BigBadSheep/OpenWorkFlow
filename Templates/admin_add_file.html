@@ -107,7 +107,6 @@
             justify-content: center;
         }
 
-        /* Styl dla hiperłączy */
         a {
             text-decoration: none;
             color: inherit;
@@ -119,7 +118,7 @@
 
         .container {
             background-color: #fff;
-            width: 800px;
+            width: 500px;
             margin: 20px auto;
             padding: 20px;
             border-radius: 5px;
@@ -151,61 +150,47 @@
 <body>
     <div id="sidebar">
         <div class="close-btn" onclick="closeNav()">×</div>
-        <a href="{{ url_for('upload') }}"class="settings">Prześlij nowy dokument</a>
-        <a href="{{ url_for('docks') }}">Twoje dokumenty</a>
-        <a href="{{ url_for('new_bugs') }}">Dodaj zgłoszenie</a>
-        <a href="{{ url_for('self_edit_user') }}">Ustawienia</a>
+        <a href="{{ url_for('new_user') }}">Rejestracja użytkowników</a>
+        <a href="{{ url_for('new_grp') }}">Dodawanie nowej grupy</a>
+        <a href="{{ url_for('admin_add_file') }}" class="settings">Dodaj nowy dokument</a>
+        <a href="{{ url_for('admin_new_flow') }}"> Prześlij dokument</a>
+        <a href="{{ url_for('admin_flows') }}">Twoje dokumenty</a>
+        <a href="{{ url_for('admin_bugs') }}">Zgłoszenia użytkowników</a>
+        <a href="{{ url_for('users') }}">Zarządzanie użytkownikami</a>
+        <a href="{{ url_for('groups') }}">Zarządzanie grupami</a>
+        <a href="{{ url_for('admin_self_edit_user') }}">Ustawienia</a>
     </div>
 
     <div id="content">
         <div id="openBtn" onclick="toggleNav()">☰</div>
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('logout') }}">Wyloguj</a>
-                </li>
-            </ul>
-        </nav>
-
-        <h1>Wysyłanie dokumentu</h1>
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <i class="fas fa-file-upload"></i> Wybierz i wyślij dokument
-                        </div>
-                        <div class="card-body">
-                            <form method="POST" action="" enctype="multipart/form-data">
-                                <div class="form-group">
-                                    <label for="document_name">Nazwa dokumentu</label>
-                                    <input type="text" class="form-control" id="document_name" name="document_name" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="document_file">Wybierz dokument</label>
-                                    <input type="file" class="form-control-file" id="document_file" name="file" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="recipient_id">Wybierz odbiorcę</label>
-                                    <select class="form-control" id="recipient_id" name="recipient_id" required>
-                                        {% for user in users %}
-                                        <option value="{{ user[0] }}"></option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <button type="submit" class="btn btn-primary">Wyślij dokument <i class="fas fa-upload"></i></button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
+          <nav class="navbar navbar-expand-lg navbar-light bg-light">
+              <ul class="navbar-nav ml-auto">
+                  <li class="nav-item">
+                      <a class="nav-link" href="{{ url_for('logout') }}">Wyloguj</a>
+                  </li>
+              </ul>
+          </nav>
+  
+          <h1>Dodawanie dokumentu</h1>
         </div>
-    </div>
-
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
+      </div>
+      <div>
+        <div>
+        <div class="container">
+            <div class="card-header">
+                <i class="fas fa-file-upload"></i> Wybierz i dodaj dokument
+            </div>
+            <br>
+            <form id="add_file" action="{{ url_for('add_file') }}" method="POST" enctype=multipart/form-data>
+                <div class="form-group">
+                <label> Nazwa pliku </label> <input type="text" id="publicfilename" name="publicfilename" >
+                </div>
+                <input type=file name=file>
+                <br><br>
+                <input type="submit"  value="Dodaj"> 
+            </form>
+        </div>
+    </div>  
     <script>
         function toggleNav() {
             var sidebar = document.getElementById("sidebar");
@@ -231,6 +216,7 @@
             document.getElementById("openBtn").style.left = "0";
         }
     </script>
+
 </body>
 
-</html>
+</html> 

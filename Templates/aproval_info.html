@@ -2,29 +2,85 @@
 <div> <p style="color:red">  {{message }} </p> </div>
 {%endfor%}
 <div >
+  <h1> Akceptowany Flow</h1>
+ <table >
+ <thead>
+ <tr>
+  <th> ID</th>
+ <th >Flowname</th>
+ <th >Flowdescription</th>
+ <th >Plik</th>
+ <th >Aktualny numer</th>
+ <th >Status ukończenia</th>
+ </tr>
+ </thead>
+ <tbody> 
+  <tr>
+  {% for flow in flows %}
+  
+  <th scope="row">{{ flow.id_flo }}</th>
+  <td>{{ flow.flowname }}</td>
+  <td>{{ flow.flowdescription }}</td>
+  <td> 
+     <a href="{{ url_for('download_secret_file', name= flow.filename ) }}" role="button" target="_blank"> {{ flow.filename }} </a>  <!-- te linki są do poprway-->
+ </td>
+  <td> {{ flow.number }} </td>
+  <td> {{ flow.status }}  </td>
+  <!--
+  <td> {{ flow.description }}  </td>
+  <td>
+    <a href="{{ url_for('workflows_info', id_flo=flow.flow_id ) }}" role="button">Więcej informacji</a>
+  </td>-->
+  </tr>
+  {%endfor%}
+</tbody>
+</table>
+</div>
+  <h1> Tabela drogi pliku </h1>
+
   <table >
     <thead>
     <tr>
-    <th >#</th>
-    <th >flow_id</th>
-    <th >group_id</th>
-    <th >value</th>
-  
+    <th >Nazwa grupy do akceptacji</th>
+    <th >Wartość kolejności przydzielona na drupy</th>
+    <th >Komentarz do pojętego działania</th>
     </tr>
     </thead>
-    <tbody>
-    {% for info in infos %}
-    <tr>
-    <th scope="row">{{ info.id_app }}</th>
-    <td>{{ info.flow_id }}</td>
-    <td>{{ info.group_id }}</td>
-    <td> {{ info.value }} </td>
-  
-    </tr>
-    {%endfor%}
-    </tbody>
-    </table>
-  
-  </div>
+    <tbody> 
+     <tr>
+     {% for approval in approvals %} 
+     
+     <th scope="row">{{ approval.groupname }}</th>
+     <td>{{ approval.value }}</td>
+     <td>{{ approval.description }}</td>
+     <!--
+     <td> {{ approval.description }}  </td>
+     <td>
+       <a href="{{ url_for('workflows_info', id_flo=approval.flow_id ) }}" role="button">Więcej informacji</a>
+     </td>-->
+     </tr>
+     {%endfor%}
+   </tbody>
+   </table>
 
+
+
+</div>
+  <div>
+
+    <br> <br>
+    <h1> Działanie </h1>
+    <form id="aprove" action="{{ url_for('aprove', id_flo=ajdik_flow) }}" method="POST">
+      <label> Komentarz </label> <input type="textarea" id="komentarz" name="komentarz" >  <br>
+      <label> akceptuja / odmowa </label> <br>
+      
+      <input type="radio" name="opcja" id="Akceptacja" value="Akceptacja"> Akceptacja </input><br>
+      <input type="radio" name="opcja" id="Odmowa" value="Odmowa"> Odmowa </input><br>
+  
+      <br>
+      <input type="submit"  value="Wyślij"> <br>
+  </form>
+
+
+  </div>
 </div>

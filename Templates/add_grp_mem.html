@@ -1,34 +1,242 @@
 <!DOCTYPE html>
 <html> 
-    <head>
-        <title> Dodaj użytownika do grupy </title>
-        <meta charset="="utf-8">
-    </head>
-    <body>
-        {% for message in get_flashed_messages() %}
-        <div> <p style="color:red">  {{message }} </p> </div>
-        {%endfor%}
+    <meta charset="utf-8">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('https://scontent-waw1-1.xx.fbcdn.net/v/t1.15752-9/393982217_378995091131028_1858520123515179774_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=8cd0a2&_nc_ohc=1IWNuqyCjZwAX_Sgvd1&_nc_ht=scontent-waw1-1.xx&oh=03_AdQhB4IhOqDqyKDKmPoVNTueJKlaRz3cFzVYEWWacB-Yvw&oe=65840444'); /* Dodaj ścieżkę do pliku graficznego */
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            margin: 0;
+            padding: 0;
+            height: 100vh; /* Dodano ustawienie wysokości na 100% wysokości okna przeglądarki */
+        }
+
+        h1 {
+            background-color: #5a9c65;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            margin: 0;
+        }
+
+        #sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #406b46;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        #sidebar a {
+            padding: 15px 8px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #ffffff;
+            display: block;
+            transition: 0.3s;
+        }
+
+        #sidebar a:hover {
+            color: #5a9c65;
+        }
+
+        #sidebar .close-btn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 30px;
+            margin-left: 50px;
+            cursor: pointer;
+        }
+
+        #content {
+            transition: margin-left .5s;
+            padding: 16px;
+            margin-left: 0;
+        }
+
+        form {
+            background-color: #fff;
+            width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        input[type="submit"] {
+            background-color: #5a9c65;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #406b46;
+        }
+
+        p {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .fa-user,
+        .fa-lock,
+        .fa-sign-in-alt,
+        .fa-arrow-left {
+            margin-right: 10px;
+        }
+
+        .btn-back {
+            text-decoration: none;
+            color: #fff;
+            background-color: #406b46;
+            padding: 10px 20px;
+            border-radius: 3px;
+            margin-top: 20px;
+            display: inline-block;
+        }
+
+        .btn-back:hover {
+            background-color: #5a9c65;
+        }
+
+        #openBtn {
+            font-size: 30px;
+            cursor: pointer;
+            position: fixed;
+            top: 50%;
+            left: 0;
+            margin-top: -15px;
+            padding: 15px;
+            background-color: #406b46;
+            color: #ffffff;
+            z-index: 2;
+            transition: left 0.5s;
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        #userWelcome {
+            color: #303030;
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        #sidebar a.settings {
+            font-weight: bold;
+            background-color: #5a9c65;
+            color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="sidebar">
+        <div class="close-btn" onclick="closeNav()">×</div>
+        <a href="{{ url_for('new_user') }}">Rejestracja użytkowników</a>
+        <a href="{{ url_for('new_grp') }}" class="settings">Dodawanie nowej grupy</a>
+        <a href="{{ url_for('new_flow') }}">Prześlij nowy dokument</a>
+        <a href="{{ url_for('workflows') }}">Twoje dokumenty</a>
+        <a href="{{ url_for('admin_bugs') }}">Zgłoszenia użytkowników</a>
+        <a href="{{ url_for('users') }}">Zarządzanie użytkownikami</a>
+        <a href="{{ url_for('groups') }}">Zarządzanie grupami</a>
+        <a href="{{ url_for('admin_settings') }}">Ustawienia</a>
+    </div>
+
+    <div id="content">
+        <div id="openBtn" onclick="toggleNav()">☰</div>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+
+
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('logout') }}">Wyloguj</a>
+                </li>
+            </ul>
+        </nav>
         <h1> Dodaj użytownika do grupy </h1>
         <br>
         <form id="add_group_member" action="{{ url_for('add_group_member') }}" method="POST">
-            <!-- <label> user_id </label> <input type="text" id="user_id" name="user_id" >  <br> !-->
-            <label> email </label>           
+
+            <label> E-mail </label>           
             <input list="emailb" name="email" id="email">
             <datalist id="emailb">
                 {% for user in users %}
                 <option value="{{ user.email }}">
                 {% endfor %}    
             </datalist>
-             <br>
-            <!--  <label> group_id </label> <input type="text" id="group_id" name="group_id" >  <br> !-->
-            <label> group name </label>
+            <br>
+
+            <label> Nazwa grupy </label>
             <input list="groups" name="groupname" id="groupname">
             <datalist id="groups">
                 {% for gorup in groups %}
                 <option value="{{ gorup.groupname }}">
                 {% endfor %}    
             </datalist>
-            <br>
+            <br><br>
             <input type="submit"  value="Send"> <br>
         </form>
+    </div> 
+
+    <script>
+        function toggleNav() {
+            var sidebar = document.getElementById("sidebar");
+            var content = document.getElementById("content");
+            var openBtn = document.getElementById("openBtn");
+
+            if (sidebar.style.width === "250px") {
+                closeNav();
+            } else {
+                openNav();
+            }
+        }
+
+        function openNav() {
+            document.getElementById("sidebar").style.width = "250px";
+            document.getElementById("content").style.marginLeft = "250px";
+            document.getElementById("openBtn").style.left = "250px";
+        }
+
+        function closeNav() {
+            document.getElementById("sidebar").style.width = "0";
+            document.getElementById("content").style.marginLeft = "0";
+            document.getElementById("openBtn").style.left = "0";
+        }
+    </script>
 </body>
+
+</html>
