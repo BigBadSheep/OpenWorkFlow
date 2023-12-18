@@ -532,7 +532,7 @@ def flow_info(id_flo):
 
     return render_template('flows_info.html', active_menu='users', flows=flows, login=login, approvals=approvals)
 
-@app.route('/workflows_info/<id_flo>', methods=['GET', 'POST']) #do naprawy
+@app.route('/workflows_info/<id_flo>', methods=['GET', 'POST']) 
 def workflows_info(id_flo):
     login = UserPass(session.get('user'))
     login.get_user_info()
@@ -540,21 +540,118 @@ def workflows_info(id_flo):
        flash(f'Użytkownik {login.user} nie aktywny')
        return redirect(url_for('login'))
 
-
     db = get_db()
-    sql_command = 'SELECT f.id_flo, f.flowname, f.flowdescription, fl.filename AS file_name, f.number, f.status FROM flow f INNER JOIN files fl ON f.file_id = fl.id_fil;'
     cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    
+    sql_command = '''
+WITH RankedApproval AS (
+    SELECT
+        f.flowname,
+        f.flowdescription,
+        fl.filename,
+        g.groupname,
+        f.status,
+        at.flow_id,
+        at.group_id,
+        at.value,
+        f.number,
+        at.description,
+        ROW_NUMBER() OVER (PARTITION BY f.id_flo ORDER BY at.value) AS rn
+    FROM
+        public.flow f
+    INNER JOIN
+        public.files fl ON f.file_id = fl.id_fil
+    INNER JOIN
+        public.approval_table at ON f.id_flo = at.flow_id
+    INNER JOIN
+        public.group_members gm ON at.group_id = gm.group_id
+    INNER JOIN
+        public.users u ON gm.user_id = u.id_use
+    INNER JOIN
+        public.groups g ON gm.group_id = g.id_grp
+    WHERE
+        f.status = FALSE
+)
+SELECT
+    flowname,
+    flowdescription,
+    filename,
+    groupname,
+    status,
+    flow_id,
+    group_id,
+    value,
+    number,
+    description
+FROM
+    RankedApproval
+WHERE
+    rn = 1;
+
+'''
+    
     cur.execute(sql_command)
-    flows=cur.fetchall() 
+
+    false_flows=cur.fetchall()
+
+    sql_command2 = '''
+WITH RankedApproval AS (
+    SELECT
+        f.flowname,
+        f.flowdescription,
+        fl.filename,
+        g.groupname,
+        f.status,
+        at.flow_id,
+        at.group_id,
+        at.value,
+        f.number,
+        at.description,
+        ROW_NUMBER() OVER (PARTITION BY f.id_flo ORDER BY at.value) AS rn
+    FROM
+        public.flow f
+    INNER JOIN
+        public.files fl ON f.file_id = fl.id_fil
+    INNER JOIN
+        public.approval_table at ON f.id_flo = at.flow_id
+    INNER JOIN
+        public.group_members gm ON at.group_id = gm.group_id
+    INNER JOIN
+        public.users u ON gm.user_id = u.id_use
+    INNER JOIN
+        public.groups g ON gm.group_id = g.id_grp
+    WHERE
+        f.status = TRUE
+)
+SELECT
+    flowname,
+    flowdescription,
+    filename,
+    groupname,
+    status,
+    flow_id,
+    group_id,
+    value,
+    number,
+    description
+FROM
+    RankedApproval
+WHERE
+    rn = 1;
+'''
+    cur2 = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur2.execute(sql_command2)
+
+    true_flows=cur2.fetchall()
     
     #sql_command2 = 'SELECT id_app, flow_id, group_id, value FROM approval_table;'
     sql_command2 = 'SELECT g.groupname, at.value, at.description FROM public.flow f JOIN public.approval_table at ON f.id_flo = at.flow_id JOIN public.groups g ON at.group_id = g.id_grp WHERE f.id_flo = %s ORDER BY at.value ASC;'
     
-    cur2 = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur2.execute(sql_command2,[id_flo])
-    approvals=cur2.fetchall() 
+    cur3 = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur3.execute(sql_command2,[id_flo])
+    approvals=cur3.fetchall() 
 
-    return render_template('flows_info.html', active_menu='users', flows=flows, login=login, approvals=approvals)
+    return render_template('flows_info_new.html', active_menu='users', true_flows=true_flows, false_flows=false_flows, login=login, approvals=approvals)
 
 
 @app.route('/add_flow', methods=['GET', 'POST'])

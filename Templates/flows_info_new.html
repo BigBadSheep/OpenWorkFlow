@@ -2,36 +2,75 @@
 <div> <p style="color:red">  {{message }} </p> </div>
 {%endfor%}
 <div >
+<h1> aktualne flow</h1>
  <table >
  <thead>
  <tr>
- <th >#</th>
+  <th> ID</th>
  <th >Flowname</th>
  <th >Flowdescription</th>
  <th >Plik</th>
- <th >Number</th>
- <th >Status</th>
+ <th >Grupa do akceptacji</th>
+ <th >Zakoczone</th>
+ <th >Komentarz</th>
  <th >Actions</th>
  </tr>
  </thead>
  <tbody>
-  {% for flow in flows %}
   <tr>
-  <th scope="row">{{ flow.id_flo }}</th>
-  <td>{{ flow.flowname }}</td>
-  <td>{{ flow.flowdescription }}</td>
+  {% for false_flow in false_flows %}
+  
+  <th scope="row">{{ false_flow.flow_id }}</th>
+  <td>{{ false_flow.flowname }}</td>
+  <td>{{ false_flow.flowdescription }}</td>
   <td> 
-     <a href="{{ url_for('download_secret_file', name= flow.file_name ) }}" role="button"> {{ flow.file_name }} </a> 
+     <a href="{{ url_for('download_secret_file', name= false_flow.filename ) }}" role="button" target="_blank"> {{ false_flow.filename }} </a>  <!-- te linki są do poprway-->
  </td>
-  <td> {{ flow.number }} </td>
-  <td> {{ flow.status }}  </td>
+  <td> {{ false_flow.groupname }} </td>
+  <td> {{ false_flow.status }}  </td>
+  <td> {{ false_flow.description }}  </td>
   <td>
-    <a href="{{ url_for('flow_info', id_flo=flow.id_flo) }}" role="button">More info</a>
-    </td>
+    <a href="{{ url_for('workflows_info', id_flo=false_flow.flow_id ) }}" role="button">Więcej informacji</a>
+  </td>
+  </tr>
+  {%endfor%}
+</tbody>
+</table>
+</div>
+<div>
+<h1> stare flow</h1>
+<table >
+<thead>
+  <tr>
+  <th >#</th>
+  <th >Flowname</th>
+  <th >Flowdescription</th>
+  <th >Plik</th>
+  <th >Number</th>
+  <th >Actions</th>
+  </tr>
+  </thead>
+  <tbody>
+  
+  {% for true_flow in true_flows %}
+  <tr>
+  <th scope="row">{{ true_flow.flow_id }}</th>
+  <td>{{ true_flow.flowname }}</td>
+  <td>{{ true_flow.flowdescription }}</td>
+  <td> 
+     <a href="{{ url_for('download_secret_file', name= true_flow.filename ) }}" role="button" target="_blank"> {{ true_flow.filename }} </a> 
+ </td>
+  <td> {{ true_flow.groupname }} </td>
+  <td>
+    <a href="{{ url_for('workflows_info', id_flo=true_flow.flow_id) }}" role="button">Więcej informacji</a>
+  </td>
   </tr>
   {%endfor%}
  </tbody>
  </table>
+</div>
+
+
 <br> <br>
 <table >
   <thead>
@@ -65,8 +104,8 @@
     <label> Komentarz </label> <input type="textarea" id="komentarz" name="komentarz" >  <br>
     <label> akceptuja / odmowa </label> <br>
     
-    <input type="radio" name="opcja" id="option1" value="option1"> Akceptacja </input><br>
-    <input type="radio" name="opcja" id="option2" value="option2"> Odmowa </input><br>
+    <input type="radio" name="opcja" id="Akceptacja" value="Akceptacja"> Akceptacja </input><br>
+    <input type="radio" name="opcja" id="Odmowa" value="Odmowa"> Odmowa </input><br>
 
     <br>
     <input type="submit"  value="Wyślij"> <br>

@@ -30,7 +30,7 @@
   <td> {{ false_flow.status }}  </td>
   <td> {{ false_flow.description }}  </td>
   <td>
-    <a href="{{ url_for('flow_info', id_flo=false_flow.flow_id) }}" role="button">Więcej informacji</a>
+    <a href="{{ url_for('workflows_info', id_flo=false_flow.flow_id ) }}" role="button">Więcej informacji</a>
   </td>
   </tr>
   {%endfor%}
@@ -62,7 +62,7 @@
  </td>
   <td> {{ true_flow.groupname }} </td>
   <td>
-    <a href="{{ url_for('flow_info', id_flo=true_flow.flow_id) }}" role="button">Więcej informacji</a>
+    <a href="{{ url_for('workflows_info', id_flo=true_flow.flow_id) }}" role="button">Więcej informacji</a>
   </td>
   </tr>
   {%endfor%}
