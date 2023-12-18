@@ -36,6 +36,10 @@ def close_db(error):
     if hasattr(g, 'db'):
         g.db.close()
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 #zaznaczone funckje pochodzą częściwo z poradnika Python Flask - aplikacje webowe - kurs z podręcznikiem PDF autorstwa Rafał Mobilo dostępnego pod linkiem https://www.udemy.com/course/python-flask-aplikacje-webowe/
 
 @app.route('/init_app') #funckja częściwo zaczerpnięta z prodnika
@@ -78,6 +82,9 @@ def login():
     login = UserPass(user_name, user_pass)
     login_record = login.login_user()
 
+
+
+    
     if login_record != None:
         session['user'] = user_name
         flash('Logon succesfull, welcome {}'.format(user_name))
@@ -1163,7 +1170,7 @@ def add_file():
             return redirect(url_for('add_file'))
         else:
             flash('Correct error: {}'.format(message))
-            return render_template('add_file.html', active_menu='new_file', data=data, login=login)
+            return render_template('mian.html', active_menu='new_file', data=data, login=login)
 
 
 @app.route('/admin_add_file', methods=['GET', 'POST'])

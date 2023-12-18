@@ -152,7 +152,7 @@
         <div class="close-btn" onclick="closeNav()">×</div>
         <a href="{{ url_for('add_file') }}">Dodaj nowy dokument</a>    
         <a href="{{ url_for('new_flow') }}" class="settings">Prześlij dokument</a>
-        <a href="{{ url_for('workflows') }}">Twoje dokumenty</a>
+        <a href="{{ url_for('my_aprove') }}">Twoje dokumenty</a>
         <a href="{{ url_for('new_bugs') }}">Dodaj zgłoszenie</a>
         <a href="{{ url_for('self_edit_user') }}">Ustawienia</a>
     </div>
@@ -178,10 +178,10 @@
                         <div class="card-body">
                             <form id="flow_form" action="{{ url_for('add_flow') }}" method="POST" enctype=multipart/form-data> 
                                 <div class="form-group">
-                                <label> Nazwa dokumentu </label> <input type="text" id="flow_name" name="flow_name" >  <br>
+                                <label> Nazwa flow </label> <input type="text" id="flow_name" name="flow_name" >  <br>
                                 </div>
                                 <div class="form-group">
-                                <label> Wybierz odbiorcę </label><input type="text" id="flowdescription" name="flowdescription"> <br>
+                                <label> Opis </label><input type="text" id="flowdescription" name="flowdescription"> <br>
                                 </div>
                                 <label> plik </label>           
                                 <input list="filenameb" name="filename" id="filename">
