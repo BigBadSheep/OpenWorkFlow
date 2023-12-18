@@ -1219,7 +1219,7 @@ def aprove(id_flo):
 
 
     if request.method == 'GET':
-        sql_command = 'SELECT f.id_flo, f.flowname, f.flowdescription, fl.filename AS file_name, f.number, f.status FROM flow f INNER JOIN files fl ON f.file_id = fl.id_fil where fl.id_fil=%s;'
+        sql_command = 'SELECT f.id_flo, f.flowname, f.flowdescription, fl.filename, f.number, f.status FROM flow f INNER JOIN files fl ON f.file_id = fl.id_fil where f.id_flo=%s;'
         cur.execute(sql_command,[id_flo])
         flows=cur.fetchall() 
         
@@ -1230,7 +1230,7 @@ def aprove(id_flo):
         cur.execute(sql_command2,[id_flo])
         approvals=cur.fetchall() 
 
-        return render_template('flows_info_new.html', active_menu='users', flows=flows, login=login, approvals=approvals, action=action)
+        return render_template('aproval_info.html', active_menu='users', flows=flows, login=login, approvals=approvals, action=action, ajdik_flow=id_flo)
     else:
         action['komentarz'] = '' if not 'komentarz' in request.form else request.form['komentarz']
         action['opcja'] = '' if not 'opcja' in request.form else request.form['opcja']
@@ -1295,4 +1295,4 @@ def aprove(id_flo):
             return redirect(url_for('main'))
         else:
             flash('Correct error: {}'.format(message))
-            return render_template('flows_info_new.html', flows=flows, login=login, approvals=approvals, action=action)
+            return render_template('aproval_info.html', flows=flows, login=login, approvals=approvals, action=action)

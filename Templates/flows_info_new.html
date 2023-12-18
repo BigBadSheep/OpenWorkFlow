@@ -97,19 +97,5 @@
   </tbody>
   </table>
 
-   
-  <br> <br>
-  {% for flow in flows %}
-  <form id="aprove" action="{{ url_for('aprove', id_flo=flow.id_flo) }}" method="POST">
-    <label> Komentarz </label> <input type="textarea" id="komentarz" name="komentarz" >  <br>
-    <label> akceptuja / odmowa </label> <br>
-    
-    <input type="radio" name="opcja" id="Akceptacja" value="Akceptacja"> Akceptacja </input><br>
-    <input type="radio" name="opcja" id="Odmowa" value="Odmowa"> Odmowa </input><br>
-
-    <br>
-    <input type="submit"  value="Wyślij"> <br>
-</form>
-{%endfor%}
 
 </div>
