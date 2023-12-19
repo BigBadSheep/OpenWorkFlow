@@ -19,7 +19,6 @@
             height: 100vh;
         }
 
-
         h1 {
             background-color: #5a9c65;
             color: #fff;
@@ -180,13 +179,13 @@
     <a href="{{ url_for('new_user') }}">Rejestracja użytkowników</a>
     <a href="{{ url_for('new_grp') }}">Dodawanie nowej grupy</a>
     <a href="{{ url_for('admin_add_file') }}">Dodaj nowy dokument</a>
-    <a href="{{ url_for('admin_new_flow') }}"> Prześlij dokument</a>
+    <a href="{{ url_for('admin_new_flow') }}">Prześlij dokument</a>
     <a href="{{ url_for('admin_my_aprove') }}"class="settings">Twoje dokumenty</a>
     <a href="{{ url_for('admin_bugs') }}">Zgłoszenia użytkowników</a>
     <a href="{{ url_for('users') }}">Zarządzanie użytkownikami</a>
     <a href="{{ url_for('groups') }}">Zarządzanie grupami</a>
     <a href="{{ url_for('admin_self_edit_user') }}">Ustawienia</a>
-  </div>
+    </div>
 
 
     <div id="content">
@@ -198,106 +197,116 @@
                 </li>
             </ul>
         </nav>
-
         <h1>Twoje dokumenty</h1>
       </div>
     </div>
-    <div>
-      <div>
-        <div class="container">
-          aktualne flow
-          <table >
-            <thead>
-              <tr>
-                <th> ID</th>
-                <th >Flowname</th>
-                <th >Flowdescription</th>
-                <th >Plik</th>
-                <th >Grupa do akceptacji</th>
-                <th >Zakoczone</th>
-                <th >Komentarz</th>
-                <th >Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-                <tr>
-                  {% for false_flow in false_flows %}
-                  <th scope="row">{{ false_flow.flow_id }}</th>
-                  <td>{{ false_flow.flowname }}</td>
-                  <td>{{ false_flow.flowdescription }}</td>
-                  <td> 
-                     <a href="{{ url_for('download_secret_file', name= false_flow.filename ) }}" role="button" target="_blank"> {{ false_flow.filename }} </a>  <!-- te linki są do poprway-->
-                 </td>
-                  <td> {{ false_flow.groupname }} </td>
-                  <td> {{ false_flow.status }}  </td>
-                  <td> {{ false_flow.description }}  </td>
-                  <td>
-                    <a href="{{ url_for('workflows_info', id_flo=false_flow.flow_id ) }}" class="btn btn-primary btn-sm" role="button">Więcej informacji</a>
-                </td>
-                </tr>
-            {%endfor%}
-            </tbody>
-        </table>
-       </div>
-      </div>
-    </div>
-
-    <div class="container">
-      stare flow
+    <div >
+      <div class="container">
+      Akceptowany Flow
       <table >
-      
         <thead>
           <tr>
-            <th >#</th>
+            <th> ID</th>
             <th >Flowname</th>
             <th >Flowdescription</th>
             <th >Plik</th>
-            <th >Number</th>
-            <th >Actions</th>
+            <th >Aktualny numer</th>
+            <th >Status ukończenia</th>
           </tr>
         </thead>
-        <tbody>
-          {% for true_flow in true_flows %}
+        <tbody> 
           <tr>
-            <th scope="row">{{ true_flow.flow_id }}</th>
-            <td>{{ true_flow.flowname }}</td>
-            <td>{{ true_flow.flowdescription }}</td>
+            {% for flow in flows %}
+  
+            <th scope="row">{{ flow.id_flo }}</th>
+            <td>{{ flow.flowname }}</td>
+            <td>{{ flow.flowdescription }}</td>
             <td> 
-              <a href="{{ url_for('download_secret_file', name= true_flow.filename ) }}" role="button" target="_blank"> {{ true_flow.filename }} </a> 
+              <a href="{{ url_for('download_secret_file', name= flow.filename ) }}" role="button" target="_blank"> {{ flow.filename }} </a>  <!-- te linki są do poprway-->
             </td>
-            <td> {{ true_flow.groupname }} </td>
-            <td>
-              <a href="{{ url_for('workflows_info', id_flo=true_flow.flow_id) }}" role="button">Więcej informacji</a>
-            </td>
+            <td> {{ flow.number }} </td>
+            <td> {{ flow.status }}  </td>
+          <!--
+          <td> {{ flow.description }}  </td>
+          <td>
+            <a href="{{ url_for('workflows_info', id_flo=flow.flow_id ) }}" role="button">Więcej informacji</a>
+          </td>-->
+        </tr>
+        {%endfor%}
+      </tbody>
+      </table>
+      </div>
+  </div>
+    <div class="container">
+      Tabela drogi pliku
+
+      <table >
+        <thead>
+          <tr>
+            <th >Nazwa grupy do akceptacji</th>
+            <th >Wartość kolejności przydzielona na drupy</th>
+            <th >Komentarz do pojętego działania</th>
           </tr>
-            {%endfor%}
-           </tbody>
+        </thead>
+        <tbody> 
+          <tr>
+            {% for approval in approvals %} 
+           
+            <th scope="row">{{ approval.groupname }}</th>
+            <td>{{ approval.value }}</td>
+            <td>{{ approval.description }}</td>
+                   <!--
+                   <td> {{ approval.description }}  </td>
+                   <td>
+                     <a href="{{ url_for('workflows_info', id_flo=approval.flow_id ) }}" role="button">Więcej informacji</a>
+                   </td>-->
+                  </tr>
+                  {%endfor%}
+        </tbody>
       </table>
     </div>
+
+
+    <div>
+      <div>
+        <div class="container">
+          Działanie
+          <form id="aprove" action="{{ url_for('aprove', id_flo=ajdik_flow) }}" method="POST">
+            <label> Komentarz </label> <input type="textarea" id="komentarz" name="komentarz" >  <br>
+            <label> akceptuja / odmowa </label> <br>
+      
+            <input type="radio" name="opcja" id="Akceptacja" value="Akceptacja"> Akceptacja </input> <input type="radio" name="opcja" id="Odmowa" value="Odmowa"> Odmowa </input> <input type="submit"  value="Wyślij">
+          </form>
+        </div>  
+
+
+      </div>
+    </div>
     <script>
-      function toggleNav() {
-          var sidebar = document.getElementById("sidebar");
-          var content = document.getElementById("content");
-          var openBtn = document.getElementById("openBtn");
-    
-          if (sidebar.style.width === "250px") {
-              closeNav();
-          } else {
-              openNav();
-          }
+    function toggleNav() {
+      var sidebar = document.getElementById("sidebar");
+      var content = document.getElementById("content");
+      var openBtn = document.getElementById("openBtn");
+
+      if (sidebar.style.width === "250px") {
+          closeNav();
+      } else {
+          openNav();
       }
-    
-      function openNav() {
-          document.getElementById("sidebar").style.width = "250px";
-          document.getElementById("content").style.marginLeft = "250px";
-          document.getElementById("openBtn").style.left = "250px";
-      }
-    
-      function closeNav() {
-          document.getElementById("sidebar").style.width = "0";
-          document.getElementById("content").style.marginLeft = "0";
-          document.getElementById("openBtn").style.left = "0";
-      }
-    </script>
+    }
+
+    function openNav() {
+      document.getElementById("sidebar").style.width = "250px";
+      document.getElementById("content").style.marginLeft = "250px";
+      document.getElementById("openBtn").style.left = "250px";
+    }
+
+    function closeNav() {
+      document.getElementById("sidebar").style.width = "0";
+      document.getElementById("content").style.marginLeft = "0";
+      document.getElementById("openBtn").style.left = "0";
+    }
+  </script>
 </body>
+
 </html>
