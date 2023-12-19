@@ -830,7 +830,7 @@ def add_flow():
             db.commit()
             flash('Flow {} created'.format(flow['flow_name']))
 
-            return redirect(url_for('workflows'))
+            return redirect(url_for('menu'))
         else:
             flash('Correct error: {}'.format(message))
             return render_template('new_flow.html', active_menu='workflows', flow=flow, login=login)
@@ -1070,7 +1070,7 @@ def new_bugs():
             db.commit()
             flash('Bug {} upolded'.format(bug))
 
-            return redirect(url_for('main'))
+            return redirect(url_for('menu'))
         else:
             flash('Correct error: {}'.format(message))
             return render_template('new_bugs.html', active_menu='new_bugs', bug=bug, login=login)
@@ -1591,7 +1591,7 @@ def aprove(id_flo):
             #db.commit()
             flash('Dokonano {} update'.format(action))
 
-            return redirect(url_for('main'))
+            return redirect(url_for('menu'))
         else:
             flash('Correct error: {}'.format(message))
             return render_template('aproval_info.html', flows=flows, login=login, approvals=approvals, action=action)
@@ -1692,7 +1692,7 @@ def admin_aprove(id_flo):
             #db.commit()
             flash('Dokonano {} update'.format(action))
 
-            return redirect(url_for('main'))
+            return redirect(url_for('menu'))
         else:
             flash('Correct error: {}'.format(message))
             return render_template('admin_aproval_info.html', flows=flows, login=login, approvals=approvals, action=action)
