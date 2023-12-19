@@ -19,7 +19,6 @@
             height: 100vh;
         }
 
-
         h1 {
             background-color: #5a9c65;
             color: #fff;
@@ -173,20 +172,19 @@
         }
     </style>
 </head>
-
 <body>
   <div id="sidebar">
     <div class="close-btn" onclick="closeNav()">×</div>
     <a href="{{ url_for('new_user') }}">Rejestracja użytkowników</a>
     <a href="{{ url_for('new_grp') }}">Dodawanie nowej grupy</a>
     <a href="{{ url_for('admin_add_file') }}">Dodaj nowy dokument</a>
-    <a href="{{ url_for('admin_new_flow') }}"> Prześlij dokument</a>
-    <a href="{{ url_for('admin_my_aprove') }}"class="settings">Twoje dokumenty</a>
+    <a href="{{ url_for('admin_new_flow') }}">Prześlij dokument</a>
+    <a href="{{ url_for('admin_my_aprove') }}">Twoje dokumenty</a>
     <a href="{{ url_for('admin_bugs') }}">Zgłoszenia użytkowników</a>
     <a href="{{ url_for('users') }}">Zarządzanie użytkownikami</a>
     <a href="{{ url_for('groups') }}">Zarządzanie grupami</a>
     <a href="{{ url_for('admin_self_edit_user') }}">Ustawienia</a>
-  </div>
+    </div>
 
 
     <div id="content">
@@ -206,72 +204,83 @@
       <div>
         <div class="container">
           aktualne flow
-          <table >
-            <thead>
-              <tr>
-                <th> ID</th>
-                <th >Flowname</th>
-                <th >Flowdescription</th>
-                <th >Plik</th>
-                <th >Grupa do akceptacji</th>
-                <th >Zakoczone</th>
-                <th >Komentarz</th>
-                <th >Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-                <tr>
-                  {% for false_flow in false_flows %}
-                  <th scope="row">{{ false_flow.flow_id }}</th>
-                  <td>{{ false_flow.flowname }}</td>
-                  <td>{{ false_flow.flowdescription }}</td>
-                  <td> 
-                     <a href="{{ url_for('download_secret_file', name= false_flow.filename ) }}" role="button" target="_blank"> {{ false_flow.filename }} </a>  <!-- te linki są do poprway-->
-                 </td>
-                  <td> {{ false_flow.groupname }} </td>
-                  <td> {{ false_flow.status }}  </td>
-                  <td> {{ false_flow.description }}  </td>
-                  <td>
-                    <a href="{{ url_for('workflows_info', id_flo=false_flow.flow_id ) }}" class="btn btn-primary btn-sm" role="button">Więcej informacji</a>
-                </td>
-                </tr>
+        <table >
+          <thead>
+            <tr>
+              <th> ID</th>
+              <th >Flowname</th>
+              <th >Flowdescription</th>
+              <th >Plik</th>
+              <th >Grupa do akceptacji</th>
+              <th >Zakoczone</th>
+              <th >Komentarz</th>
+              <!--<th >Więcej informacji</th> !-->
+              < th >Przekaz dalej</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              {% for false_flow in false_flows %}
+  
+            <th scope="row">{{ false_flow.flow_id }}</th>
+            <td>{{ false_flow.flowname }}</td>
+            <td>{{ false_flow.flowdescription }}</td>
+            <td> 
+              <a href="{{ url_for('download_secret_file', name= false_flow.filename ) }}" role="button" target="_blank"> {{ false_flow.filename }} </a>  <!-- te linki są do poprway-->
+            </td>
+            <td> {{ false_flow.groupname }} </td>
+            <td> {{ false_flow.status }}  </td>
+            <td> {{ false_flow.description }}  </td>
+              <!--
+              <td>
+                <a href="{{ url_for('flow_info', id_flo=false_flow.flow_id) }}" role="button">Więcej informacji</a>
+              </td>
+              !-->
+              <td>
+                <a href="{{ url_for('aprove', id_flo=false_flow.flow_id) }}" role="button">Przekaz dalej</a>
+              </td>
+  
+            </tr>
             {%endfor%}
-            </tbody>
+          </tbody>
         </table>
-       </div>
+        </div>
       </div>
-    </div>
-
+    <div>
     <div class="container">
       stare flow
-      <table >
-      
-        <thead>
-          <tr>
+        <table >
+          <thead>
+            <tr>
             <th >#</th>
             <th >Flowname</th>
             <th >Flowdescription</th>
             <th >Plik</th>
             <th >Number</th>
-            <th >Actions</th>
+            <!--
+            <th >Więcej informacji</th>
+            !-->
           </tr>
         </thead>
         <tbody>
+  
           {% for true_flow in true_flows %}
-          <tr>
-            <th scope="row">{{ true_flow.flow_id }}</th>
-            <td>{{ true_flow.flowname }}</td>
-            <td>{{ true_flow.flowdescription }}</td>
-            <td> 
-              <a href="{{ url_for('download_secret_file', name= true_flow.filename ) }}" role="button" target="_blank"> {{ true_flow.filename }} </a> 
-            </td>
-            <td> {{ true_flow.groupname }} </td>
+            <tr>
+              <th scope="row">{{ true_flow.id_flo }}</th>
+              <td>{{ true_flow.flowname }}</td>
+              <td>{{ true_flow.flowdescription }}</td>
+              <td> 
+                <a href="{{ url_for('download_secret_file', name=true_flow.filename ) }}" role="button" target="_blank"> {{ true_flow.filename }} </a> 
+              </td>
+              <td> {{ true_flow.groupname }} </td>
+            <!--
             <td>
-              <a href="{{ url_for('workflows_info', id_flo=true_flow.flow_id) }}" role="button">Więcej informacji</a>
+              <a href="{{ url_for('flow_info', id_flo=true_flow.id_flo) }}" role="button">Więcej informacji</a>
             </td>
+            !-->
           </tr>
-            {%endfor%}
-           </tbody>
+          {%endfor%}
+        </tbody>
       </table>
     </div>
     <script>
@@ -298,6 +307,7 @@
           document.getElementById("content").style.marginLeft = "0";
           document.getElementById("openBtn").style.left = "0";
       }
-    </script>
+      </script>
 </body>
+    
 </html>
