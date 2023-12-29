@@ -809,12 +809,11 @@ def add_flow():
     flow = {}
 
     if request.method == 'GET':
-        
-        sql_command = 'SELECT id_fil, filename FROM files;'
+        login2 = session['user']
+        sql_command = 'SELECT id_fil, filename, users.username FROM files INNER JOIN users ON users.id_use = files.uploder where username=%s;'
         cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cur.execute(sql_command)
+        cur.execute(sql_command,[login2])
         files=cur.fetchall() 
-        
         return render_template('new_flow.html', active_menu='new_flow', flow=flow, login=login, files=files)
     else:
         flow['flow_name'] = '' if not 'flow_name' in request.form else request.form['flow_name']
