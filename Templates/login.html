@@ -82,6 +82,9 @@
 </head>
 
 <body>
+    {% for message in get_flashed_messages() %}
+    <div> <p style="color:red">  {{message }} </p> </div>
+    {%endfor%}
     <div class="main-content">
         <h1>Formularz logowania</h1>
 

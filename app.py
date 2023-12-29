@@ -81,17 +81,22 @@ def login():
 
     login = UserPass(user_name, user_pass)
     login_record = login.login_user()
-
-
-
     
     if login_record != None:
         session['user'] = user_name
-        flash('Logon succesfull, welcome {}'.format(user_name))
-        if login.is_admin:
+        login.get_user_info()
+        if login.is_admin is True:
+            flash('Logon succesfull, welcome admin {}'.format(user_name))
             return redirect(url_for('admin_menu'))
         else:
+            flash('Logon succesfull, welcome user {}'.format(user_name))
             return redirect(url_for('menu'))
+        
+        # login = UserPass(session.get('user'))
+        # login.get_user_info()
+        # if not login.is_valid or not login.is_admin:
+        #     flash(f'Użytkownik {login.user} nie jest adminem')
+        #     return redirect(url_for('login'))    
     else:
         flash('Logon failed, try again')
         return render_template('login.html')
