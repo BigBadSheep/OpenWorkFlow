@@ -133,3 +133,74 @@ VALUES
     ('BugA', 'Description for BugA'),
     ('BugB', 'Description for BugB'),
     ('BugC', 'Description for BugC');
+
+	select * from (
+--statusy userow 
+select id_flo, min(value) from 
+   (
+	   SELECT
+	u.id_use,
+	   f.id_flo,
+        f.flowname,
+        f.flowdescription,
+        fl.filename,
+        g.groupname,
+        f.status,
+        at.flow_id,
+        at.group_id,
+        at.value,
+        f.number,
+        at.description
+    FROM
+        public.flow f
+    INNER JOIN
+        public.files fl ON f.file_id = fl.id_fil
+    INNER JOIN
+        public.approval_table at ON f.id_flo = at.flow_id
+    INNER JOIN
+        public.group_members gm ON at.group_id = gm.group_id
+    INNER JOIN
+        public.users u ON gm.user_id = u.id_use
+    INNER JOIN
+        public.groups g ON gm.group_id = g.id_grp
+    WHERE
+        f.status = FALSE
+      AND u.id_use = 4
+   ) t
+		group by id_flo		
+	intersect
+		select id_flo, min(value) from 
+   (
+	   SELECT
+	u.id_use,
+	   f.id_flo,
+        f.flowname,
+        f.flowdescription,
+        fl.filename,
+        g.groupname,
+        f.status,
+        at.flow_id,
+        at.group_id,
+        at.value,
+        f.number,
+        at.description
+    FROM
+        public.flow f
+    INNER JOIN
+        public.files fl ON f.file_id = fl.id_fil
+    INNER JOIN
+        public.approval_table at ON f.id_flo = at.flow_id
+    INNER JOIN
+        public.group_members gm ON at.group_id = gm.group_id
+    INNER JOIN
+        public.users u ON gm.user_id = u.id_use
+    INNER JOIN
+        public.groups g ON gm.group_id = g.id_grp
+    WHERE
+        f.status = FALSE
+      --AND u.id_use = 3
+	   and at.value > f.number  
+   ) t
+		group by id_flo
+	) wszystko;	
+		

@@ -173,6 +173,9 @@
     </style>
 </head>
 <body>
+  {% for message in get_flashed_messages() %}
+  <div> <p style="color:red">  {{message }} </p> </div>
+  {%endfor%}
   <div id="sidebar">
     <div class="close-btn" onclick="closeNav()">×</div>
     <a href="{{ url_for('add_file') }}">Dodaj nowy dokument</a>    
@@ -192,7 +195,7 @@
                 </li>
             </ul>
         </nav>
-
+          <h2> {{user_id}} </h2>
         <h1>Twoje dokumenty</h1>
       </div>
     </div>

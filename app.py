@@ -1034,8 +1034,8 @@ def add_group_flow():
     
         if not message:
             sql_statement = '''
-    INSERT INTO approval_table (flow_id, group_id, value) 
-    SELECT f.id_flo, g.id_grp, %s 
+    INSERT INTO approval_table (flow_id, group_id, value,description) 
+    SELECT f.id_flo, g.id_grp, %s, 'brak'
     FROM public.flow f 
     JOIN public.groups g ON f.flowname = %s 
     WHERE g.groupname = %s 
@@ -1163,7 +1163,7 @@ def add_file():
                 return redirect(request.url)
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
-                secretfilename = str(time.time()+14123)+filename #randrange(10)  trzeba polosować raczej
+                secretfilename = str(random.randrange(1, 1231237612783))+filename #randrange(10)  trzeba polosować raczej
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], secretfilename))
 
 
@@ -1400,8 +1400,11 @@ def my_aprove():
         user_id = result[0]  
 
     sql_command = '''
-    WITH RankedApproval AS (
-    SELECT
+select id_flo, min(value), flowname,flowdescription, filename,groupname,description from 
+   (
+	   SELECT
+	u.id_use,
+	   f.id_flo,
         f.flowname,
         f.flowdescription,
         fl.filename,
@@ -1411,8 +1414,7 @@ def my_aprove():
         at.group_id,
         at.value,
         f.number,
-        at.description,
-        ROW_NUMBER() OVER (PARTITION BY f.id_flo ORDER BY at.value) AS rn
+        at.description
     FROM
         public.flow f
     INNER JOIN
@@ -1427,23 +1429,42 @@ def my_aprove():
         public.groups g ON gm.group_id = g.id_grp
     WHERE
         f.status = FALSE
-        AND u.id_use = %s
-)
-SELECT
-    flowname,
-    flowdescription,
-    filename,
-    groupname,
-    status,
-    flow_id,
-    group_id,
-    value,
-    number,
-    description
-FROM
-    RankedApproval
-WHERE
-    rn = 1;
+      AND u.id_use = %s
+   ) t
+		group by id_flo	,flowname,flowdescription, filename,groupname,description	
+	intersect
+		select id_flo, min(value),flowname,flowdescription, filename,groupname,description from 
+   (
+	   SELECT
+	u.id_use,
+	   f.id_flo,
+        f.flowname,
+        f.flowdescription,
+        fl.filename,
+        g.groupname,
+        f.status,
+        at.flow_id,
+        at.group_id,
+        at.value,
+        f.number,
+        at.description
+    FROM
+        public.flow f
+    INNER JOIN
+        public.files fl ON f.file_id = fl.id_fil
+    INNER JOIN
+        public.approval_table at ON f.id_flo = at.flow_id
+    INNER JOIN
+        public.group_members gm ON at.group_id = gm.group_id
+    INNER JOIN
+        public.users u ON gm.user_id = u.id_use
+    INNER JOIN
+        public.groups g ON gm.group_id = g.id_grp
+    WHERE
+        f.status = FALSE
+	   and at.value > f.number  
+   ) t
+		group by id_flo,flowname,flowdescription, filename,groupname,description;
 '''
     
     cur.execute(sql_command, [user_id])
@@ -1501,7 +1522,7 @@ WHERE
 
     true_flows=cur.fetchall()
 
-    return render_template('my_flows.html', false_flows=false_flows, login=login, true_flows=true_flows) 
+    return render_template('my_flows.html', false_flows=false_flows, login=login, true_flows=true_flows, user_id=user_id) 
 
 
 
