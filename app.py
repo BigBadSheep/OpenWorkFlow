@@ -52,7 +52,7 @@ def init_app():
     active_admins = cur.fetchone()[0]
 
     if active_admins > 0:
-        flash('Application is already set-up. Nothing to do')
+        flash('Aplikacja jest już skonfigurowana.')
         return redirect(url_for('index'))
 
     # if not - create/update admin account with a new password and admin privileges, display
@@ -64,7 +64,7 @@ def init_app():
     sql_statement = "INSERT INTO users (username, email, password, is_active, is_admin, is_cyber) VALUES (%s, %s, %s, %s, %s, %s)"
     cur.execute(sql_statement, [username, email, password, True, True, False])
     db.commit()
-    flash('User {} with password {} has been created'.format(user_pass.user, user_pass.password))
+    flash('Użytkownik {} z hasłem {} został utworzony'.format(user_pass.user, user_pass.password))
     return redirect(url_for('index'))
 
 @app.route('/login', methods=['GET','POST']) #funckja częściwo zaczerpnięta z prodnika
@@ -86,10 +86,10 @@ def login():
         session['user'] = user_name
         login.get_user_info()
         if login.is_admin is True:
-            flash('Logon succesfull, welcome admin {}'.format(user_name))
+            flash('Zalogowano pomyślnie. Witaj {}'.format(user_name))
             return redirect(url_for('admin_menu'))
         else:
-            flash('Logon succesfull, welcome user {}'.format(user_name))
+            flash('Zalogowano pomyślnie. Witaj {}'.format(user_name))
             return redirect(url_for('menu'))
         
         # login = UserPass(session.get('user'))
@@ -98,7 +98,7 @@ def login():
         #     flash(f'Użytkownik {login.user} nie jest adminem')
         #     return redirect(url_for('login'))    
     else:
-        flash('Logon failed, try again')
+        flash('Logowanie nie powiodło sie, spróbuj ponownie')
         return render_template('login.html')
 
 @app.route('/logout') #funckja częściwo zaczerpnięta z prodnika
@@ -106,7 +106,7 @@ def logout(): #funckja częściwo zaczerpnięta z prodnika
 
     if 'user' in session:
         session.pop('user', None)
-        flash('You are logged out')
+        flash('Zostałeś wylogowany')
     return redirect(url_for('login'))
 
 class UserPass:
@@ -239,7 +239,7 @@ def edit_user(user_name):
     user = cur.fetchone()
 
     if user == None:
-        flash('No such user')
+        flash('Nie ma takiego użytkownika')
         return redirect(url_for('users'))
 
     if request.method == 'GET':
@@ -252,14 +252,14 @@ def edit_user(user_name):
             sql_statement = "update users set email = %s where username = %s"
             cur.execute(sql_statement, [new_email, user_name])
             db.commit()
-            flash('Email was changed')
+            flash('E-mail został zmieniony')
 
         if new_password != '':
             user_pass = UserPass(user_name, new_password)
             sql_statement = "update users set password = %s where username = %s"
             cur.execute(sql_statement, [user_pass.hash_password(), user_name])
             db.commit()
-            flash('Password was changed')
+            flash('Hasło zostało zmienione')
 
         return redirect(url_for('users'))
     
@@ -292,7 +292,7 @@ def admin_self_edit_user():
                     sql_statement = "update users set password = %s where username = %s"
                     cur.execute(sql_statement, [user_pass.hash_password(), login.user])
                     db.commit()
-                    flash('Password was changed')
+                    flash('Hasło zostało zmienione')
                 else:
                     flash('Hasła nie są takie same')           
             else:
@@ -331,7 +331,7 @@ def self_edit_user():
                     sql_statement = "update users set password = %s where username = %s"
                     cur.execute(sql_statement, [user_pass.hash_password(), login.user])
                     db.commit()
-                    flash('Password was changed')
+                    flash('Hasło zostało zmienione')
                 else:
                     flash('Hasła nie są takie same')           
             else:
@@ -391,15 +391,15 @@ def new_user():
         is_user_email_unique = (record['cnt'] == 0)
     
         if user['user_name'] == '':
-            message = 'Name cannot be empty'
+            message = 'Nazwa nie może być pusta'
         elif user['email'] == '':
-            message = 'email cannot be empty'
+            message = 'Adres e-mail nie może być pusty'
         elif user['user_pass'] == '':
-            message = 'Password cannot be empty'
+            message = 'Hasło nie może być puste'
         elif not is_user_name_unique:
-            message = 'User with the name {} already exists'.format(user['user_name'])
+            message = 'Użytkownik o tej nazwie {} już istnieje'.format(user['user_name'])
         elif not is_user_email_unique:
-            message = 'User with the email {} alresdy exists'.format(user['email']) 
+            message = 'Użytkownik z tym adresem e-mail {} już istnieje'.format(user['email']) 
     
         if not message:
             user_pass = UserPass(user['user_name'], user['user_pass'])
@@ -407,10 +407,10 @@ def new_user():
             sql_statement = '''insert into users(username, email, password, is_active, is_admin, is_cyber) values(%s,%s,%s, True, False, False);'''
             cur.execute(sql_statement, [user['user_name'][:100], user['email'], password_hash])
             db.commit()
-            flash('User {} created'.format(user['user_name']))
+            flash('Użytkownik {} został utworzony'.format(user['user_name']))
             return redirect(url_for('users'))
         else:
-            flash('Correct error: {}'.format(message))
+            flash('Wystąpił błąd: {}'.format(message))
             return render_template('new_user.html', active_menu='users', user=user, login=login)
 
 @app.route('/')
@@ -828,21 +828,21 @@ def add_flow():
         cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
                 
         if flow['flow_name'] == '':
-            message = 'flow_name cannot be empty'
+            message = 'Nazwa przepływu nie może być pusta'
         elif flow['flowdescription'] == '':
-            message = 'flowdescription cannot be empty'
+            message = 'Opis przepływu nie może być pusty'
         elif flow['filename'] == '':
-            message = 'filename cannot be empty'    
+            message = 'Nazwa pliku nie może być pusta'    
     
         if not message:
             sql_statement = '''INSERT INTO flow (flowname, flowdescription, file_id, number, status, final_state) VALUES  ( %s, %s, ( SELECT f.id_fil FROM public.files f WHERE f.filename = %s LIMIT 1), 0, FALSE, FALSE);'''
             cur.execute(sql_statement, [ flow['flow_name'], flow['flowdescription'], flow['filename'] ])    
             db.commit()
-            flash('Flow {} created'.format(flow['flow_name']))
+            flash('Flow {} utworzony'.format(flow['flow_name']))
 
             return redirect(url_for('menu'))
         else:
-            flash('Correct error: {}'.format(message))
+            flash('Wystąpił błąd: {}'.format(message))
             return render_template('new_flow.html', active_menu='workflows', flow=flow, login=login)
         
 @app.route('/groups', methods=['GET', 'POST'])
@@ -906,19 +906,19 @@ def add_grp():
         cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
     
         if grp['group_name'] == '':
-            message = 'group_name cannot be empty'
+            message = 'Nazwa grupy nie może być pusta'
         elif grp['group_description'] == '':
-            message = 'group_description cannot be empty'    
+            message = 'Opis grupy nie może być pusty'    
     
         if not message:
             sql_statement = '''INSERT INTO groups ( groupname, groupdescription) VALUES(%s,%s);'''
             cur.execute(sql_statement, [ grp['group_name'], grp['group_description'] ]) #jedne do zmiany na id usera
             db.commit()
-            flash('Created {} group'.format(grp['group_name']))
+            flash('Utworzono {} grupę'.format(grp['group_name']))
             return redirect(url_for('groups'))
         
         else:
-            flash('Correct error: {}'.format(message))
+            flash('Wystąpił błąd: {}'.format(message))
             return render_template('new_grp.html', active_menu='groups', grp=grp, login=login)
         
 @app.route('/add_group_member/', methods=['GET', 'POST'])
@@ -961,11 +961,11 @@ def add_group_member():
         is_group_walid = (record['cnt'] == 1) 
 
         if mem['email'] == '':
-            message = 'user id cannot be empty'  
+            message = 'Identyfikator użytkownika nie może być pusty'  
         elif mem['groupname'] == '':
-            message = 'group id cannot be empty'
+            message = 'Identyfikator grupy nie może być pusty'
         elif not is_email_walid:
-            message = 'Nie ma usera o nazawie {} w bazie danych'.format(mem['email'])
+            message = 'Nie ma użytkownika o nazawie {} w bazie danych'.format(mem['email'])
         elif not is_group_walid:
             message = 'Nie ma grupy o nazwie {} w bazie danych'.format(mem['groupname'])     
 
@@ -976,7 +976,7 @@ def add_group_member():
             flash('Dodano uzytkownika do {} do grupy'.format(mem['email']))
             return redirect(url_for('groups'))        
         else:
-            flash('Correct error: {}'.format(message))
+            flash('Wystąpił błąd: {}'.format(message))
             return render_template('add_grp_mem.html', active_menu='add_grp_mem', mem=mem, login=login)
         
 @app.route('/delete_group_member/<id_gro>')
@@ -1026,11 +1026,11 @@ def add_group_flow():
         grop_add['value'] = '' if not 'value' in request.form else request.form['value']
     
         if grop_add['flow_id'] == '':
-            message = 'flow is cannot be empty'  
+            message = 'Przepływ nie może być pusty'  
         elif grop_add['group_id'] == '':
-            message = 'group id cannot be empty'
+            message = 'Identyfikator grupy nie może być pusty'
         elif grop_add['value'] == '':
-            message = 'value id cannot be empty'     #trzeba sprawdzic czy taka wrtosc jest wolna dla danego flow       
+            message = 'Identyfikator wartości nie może być pusty'     #trzeba sprawdzic czy taka wrtosc jest wolna dla danego flow       
     
         if not message:
             sql_statement = '''
@@ -1046,11 +1046,11 @@ def add_group_flow():
 '''
             cur.execute(sql_statement, [ grop_add['value'], grop_add['flow_id'], grop_add['group_id'] ]) 
             db.commit()
-            flash('Add group {} to flow'.format(grop_add['group_id']))
+            flash('Dodaj grupę {} do flow'.format(grop_add['group_id']))
             return redirect(url_for('workflows'))
         
         else:
-            flash('Correct error: {}'.format(message))
+            flash('Wystąpił błąd: {}'.format(message))
             return render_template('add_grp_flow.html', active_menu='add_grp_mem', grop_add=grop_add, login=login)
 
 
@@ -1070,19 +1070,19 @@ def new_bugs():
         cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
         if bug['name'] == '':
-            message = 'name cannot be empty'
+            message = 'Nazwa nie może być pusta'
         elif bug['error_description'] == '':
-            message = 'error_description cannot be empty'
+            message = 'Opis błędu nie może być pusty'
 
         if not message:
             sql_statement = '''INSERT INTO bugs (name ,description) VALUES(%s,%s);'''
             cur.execute(sql_statement, [bug['name'], bug['error_description']])
             db.commit()
-            flash('Bug {} upolded'.format(bug))
+            flash('Zgłoszenie {} zostało wysłane'.format(bug))
 
             return redirect(url_for('menu'))
         else:
-            flash('Correct error: {}'.format(message))
+            flash('Wystąpił błąd: {}'.format(message))
             return render_template('new_bugs.html', active_menu='new_bugs', bug=bug, login=login)
         
 @app.route('/admin_bugs')
@@ -1148,18 +1148,18 @@ def add_file():
         is_filename_unique = (record['cnt'] == 0)
 
         if data['publicfilename'] == '':
-            message = 'publicfilename cannot be empty'
+            message = 'Publiczna nazwa pliku nie może być pusta'
         elif not is_filename_unique:
-            message = 'file name {} już taki jest'.format(data['publicfilename'])    
+            message = 'Plik o nazwie {} już istnieje'.format(data['publicfilename'])    
 
         if not message:
             if 'file' not in request.files:
-                flash('No file part')
+                flash('Brak części pliku')
                 return redirect(request.url)
             file = request.files['file']
 
             if file.filename == '':
-                flash('No selected file')
+                flash('Nie wybrano pliku')
                 return redirect(request.url)
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
@@ -1175,11 +1175,11 @@ def add_file():
                 sql_statement2 = '''INSERT INTO files (filename, filepath, uploder) VALUES(%s,%s,%s);'''
                 cur.execute(sql_statement2,[ data['publicfilename'], secretfilename, user_id ])
                 db.commit()
-                flash('Plik {} upolded'.format(file))
+                flash('Plik {} został dodany'.format(file))
                 #return redirect(url_for('download_file', name=filename))
             return redirect(url_for('add_file'))
         else:
-            flash('Correct error: {}'.format(message))
+            flash('Wystąpił błąd: {}'.format(message))
             return render_template('mian.html', active_menu='new_file', data=data, login=login)
 
 
@@ -1206,18 +1206,18 @@ def admin_add_file():
         is_filename_unique = (record['cnt'] == 0)
 
         if data['publicfilename'] == '':
-            message = 'publicfilename cannot be empty'
+            message = 'Publiczna nazwa pliku nie może być pusta'
         elif not is_filename_unique:
-            message = 'file name {} już taki jest'.format(data['publicfilename'])    
+            message = 'Plik o nazwie {} już istnieje'.format(data['publicfilename'])    
 
         if not message:
             if 'file' not in request.files:
-                flash('No file part')
+                flash('Brak części pliku')
                 return redirect(request.url)
             file = request.files['file']
 
             if file.filename == '':
-                flash('No selected file')
+                flash('Nie wybrano pliku')
                 return redirect(request.url)
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
@@ -1233,11 +1233,11 @@ def admin_add_file():
                 sql_statement2 = '''INSERT INTO files (filename, filepath, uploder) VALUES(%s,%s,%s);'''
                 cur.execute(sql_statement2,[ data['publicfilename'], secretfilename, user_id ])
                 db.commit()
-                flash('Plik {} upolded'.format(file))
+                flash('Plik {} został dodany'.format(file))
                 #return redirect(url_for('download_file', name=filename))
             return redirect(url_for('admin_add_file'))
         else:
-            flash('Correct error: {}'.format(message))
+            flash('Wystąpił błąd: {}'.format(message))
             return render_template('admin_add_file.html', active_menu='new_file', data=data, login=login)
 
 
@@ -1547,7 +1547,7 @@ def aprove(id_flo):
 
         
         if action['opcja'] == '':
-            message = 'opcja cannot be empty'
+            message = 'Opcja nie może być pusta'
 
         
         
@@ -1603,7 +1603,7 @@ def aprove(id_flo):
 
             return redirect(url_for('menu'))
         else:
-            flash('Correct error: {}'.format(message))
+            flash('Wystąpił błąd: {}'.format(message))
             return render_template('aproval_info.html', flows=flows, login=login, approvals=approvals, action=action)
         
 @app.route('/admin_aprove/<id_flo>', methods=['GET', 'POST'])
@@ -1648,7 +1648,7 @@ def admin_aprove(id_flo):
 
         
         if action['opcja'] == '':
-            message = 'opcja cannot be empty'
+            message = 'Opcja nie może być pusta'
 
         
         
@@ -1704,5 +1704,5 @@ def admin_aprove(id_flo):
 
             return redirect(url_for('menu'))
         else:
-            flash('Correct error: {}'.format(message))
+            flash('Wystąpił błąd: {}'.format(message))
             return render_template('admin_aproval_info.html', flows=flows, login=login, approvals=approvals, action=action)
