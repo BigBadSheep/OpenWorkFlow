@@ -211,11 +211,15 @@ def user_status_change(action, user_name):
     if action == 'active':
         cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
         #tatus_sql='select is_active from users where name='aaa';'
-        cur.execute("update users set is_active = ((is_active::int + 1) %% 2)::boolean where username = %s and username <> %s ", (user_name, login.user))       
+        cur.execute("update users set is_active = ((is_active::int + 1) %% 2)::boolean where username = %s and username <> %s", (user_name, login.user))       
         db.commit()
     elif action == 'admin':
         cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cur.execute("update users set is_admin = ((is_admin::int + 1) %% 2)::boolean where username = %s and username <> %s", (user_name, login.user))
+        cur.execute("update users set is_admin  = ((is_admin::int + 1) %% 2)::boolean where username = %s and username <> %s", (user_name, login.user))
+        db.commit()
+    elif action == 'cyber':
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute("update users set is_cyber = ((is_cyber::int + 1) %% 2)::boolean where username = %s and username <> %s", (user_name, login.user))
         db.commit()
 
     return redirect(url_for('users'))

@@ -212,6 +212,7 @@
                         <th>E-mail</th>
                         <th>Aktywne</th>
                         <th>Administrator</th>
+                        <th>Cyber</th>
                         <th>Akcje</th>
                     </tr>
                 </thead>
@@ -231,6 +232,16 @@
                         <td> 
                             <a href="{{ url_for('user_status_change', action='admin', user_name=user.username) }}" class="btn btn-primary btn-sm">
                                 {% if user.is_admin %}
+                                   tak
+                                {% else %}
+                                   nie
+                                {% endif %}
+                            </a>
+                        
+                         </td>
+                         <td> 
+                            <a href="{{ url_for('user_status_change', action='cyber', user_name=user.username) }}" class="btn btn-primary btn-sm">
+                                {% if user.is_cyber %}
                                    tak
                                 {% else %}
                                    nie
