@@ -1,0 +1,135 @@
+CREATE TABLE "public.users" (
+	"id_use" serial NOT NULL,
+	"username" varchar(255) NOT NULL UNIQUE,
+	"password" varchar(255) NOT NULL,
+	"email" varchar(255) NOT NULL UNIQUE,
+	"is_admin" BOOLEAN NOT NULL,
+	"is_active" BOOLEAN NOT NULL,
+	"is_cyber" BOOLEAN NOT NULL,
+	CONSTRAINT "users_pk" PRIMARY KEY ("id_use")
+) WITH (
+  OIDS=FALSE
+);
+
+CREATE TABLE "public.groups" (
+	"id_grp" serial NOT NULL,
+	"groupname" varchar(255) NOT NULL,
+	"groupdescription" TEXT,
+	CONSTRAINT "groups_pk" PRIMARY KEY ("id_grp")
+) WITH (
+  OIDS=FALSE
+);
+
+CREATE TABLE "public.files" (
+	"id_fil" serial NOT NULL UNIQUE,
+	"filename" varchar(25) NOT NULL UNIQUE,
+	"filepath" varchar(50) NOT NULL,
+	"uploder" int NOT NULL,
+	CONSTRAINT "files_pk" PRIMARY KEY ("id_fil")
+) WITH (
+  OIDS=FALSE
+);
+
+CREATE TABLE "public.flow" (
+	"id_flo" serial NOT NULL,
+	"flowname" varchar(25) NOT NULL,
+	"flowdescription" varchar(100) NOT NULL,
+	"file_id" int NOT NULL,
+	"number" integer NOT NULL,
+	"status" BOOLEAN NOT NULL,
+	"final_state" BOOLEAN NOT NULL,
+	CONSTRAINT "flow_pk" PRIMARY KEY ("id_flo")
+) WITH (
+  OIDS=FALSE
+);
+
+CREATE TABLE "public.approval_table" (
+	"id_app" serial NOT NULL,
+	"flow_id" int NOT NULL,
+	"group_id" int NOT NULL,
+	"value" integer NOT NULL,
+	"description" TEXT NOT NULL,
+	CONSTRAINT "approval_table_pk" PRIMARY KEY ("id_app")
+) WITH (
+  OIDS=FALSE
+);
+
+CREATE TABLE "public.group_members" (
+	"id_gro" serial NOT NULL,
+	"user_id" int NOT NULL,
+	"group_id" int NOT NULL,
+	CONSTRAINT "group_members_pk" PRIMARY KEY ("id_gro")
+) WITH (
+  OIDS=FALSE
+);
+
+CREATE TABLE "public.bugs" (
+	"id_bug" serial NOT NULL,
+	"name" VARCHAR(255) NOT NULL,
+	"description" VARCHAR(255) NOT NULL,
+	CONSTRAINT "bugs_pk" PRIMARY KEY ("id_bug")
+) WITH (
+  OIDS=FALSE
+);
+
+ALTER TABLE "files" ADD CONSTRAINT "files_fk0" FOREIGN KEY ("uploder") REFERENCES "users"("id_use");
+
+ALTER TABLE "flow" ADD CONSTRAINT "flow_fk0" FOREIGN KEY ("file_id") REFERENCES "files"("id_fil");
+
+ALTER TABLE "approval_table" ADD CONSTRAINT "approval_table_fk0" FOREIGN KEY ("flow_id") REFERENCES "flow"("id_flo");
+ALTER TABLE "approval_table" ADD CONSTRAINT "approval_table_fk1" FOREIGN KEY ("group_id") REFERENCES "groups"("id_grp");
+
+ALTER TABLE "group_members" ADD CONSTRAINT "group_members_fk0" FOREIGN KEY ("user_id") REFERENCES "users"("id_use");
+ALTER TABLE "group_members" ADD CONSTRAINT "group_members_fk1" FOREIGN KEY ("group_id") REFERENCES "groups"("id_grp");
+
+
+#instery
+
+-- Sample data for "public.users" table
+INSERT INTO public.users (username, password, email, is_admin, is_active, is_cyber)
+VALUES
+    ('user1', 'password1', 'user1@example.com', true, true, false),
+    ('user2', 'password2', 'user2@example.com', false, true, true),
+    ('admin', 'adminpassword', 'admin@example.com', true, true, false);
+
+-- Sample data for "public.groups" table
+INSERT INTO public.groups (groupname, groupdescription)
+VALUES
+    ('GroupA', 'Description for GroupA'),
+    ('GroupB', 'Description for GroupB'),
+    ('GroupC', 'Description for GroupC');
+
+-- Sample data for "public.files" table
+INSERT INTO public.files (filename, filepath, uploder)
+VALUES
+    ('file1.txt', '/path/to/file1.txt', 1),
+    ('file2.txt', '/path/to/file2.txt', 2),
+    ('file3.txt', '/path/to/file3.txt', 3);
+
+-- Sample data for "public.flow" table
+INSERT INTO public.flow (flowname, flowdescription, file_id, number, status, final_state)
+VALUES
+    ('FlowA', 'Description for FlowA', 1, 1, true, false),
+    ('FlowB', 'Description for FlowB', 2, 2, false, true),
+    ('FlowC', 'Description for FlowC', 3, 3, true, true);
+
+-- Sample data for "public.approval_table" table
+INSERT INTO public.approval_table (flow_id, group_id, value, description)
+VALUES
+    (1, 1, 10, 'Approval for FlowA by GroupA'),
+    (2, 2, 15, 'Approval for FlowB by GroupB'),
+    (3, 3, 20, 'Approval for FlowC by GroupC');
+
+-- Sample data for "public.group_members" table
+INSERT INTO public.group_members (user_id, group_id)
+VALUES
+    (1, 1),
+    (2, 2),
+    (3, 3);
+
+-- Sample data for "public.bugs" table
+INSERT INTO public.bugs (name, description)
+VALUES
+    ('BugA', 'Description for BugA'),
+    ('BugB', 'Description for BugB'),
+    ('BugC', 'Description for BugC');

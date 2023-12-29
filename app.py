@@ -584,6 +584,7 @@ WITH RankedApproval AS (
         at.value,
         f.number,
         at.description,
+        f.final_state,
         ROW_NUMBER() OVER (PARTITION BY f.id_flo ORDER BY at.value) AS rn
     FROM
         public.flow f
@@ -610,7 +611,8 @@ SELECT
     group_id,
     value,
     number,
-    description
+    description,
+    final_state
 FROM
     RankedApproval
 WHERE
@@ -829,7 +831,7 @@ def add_flow():
             message = 'filename cannot be empty'    
     
         if not message:
-            sql_statement = '''INSERT INTO flow (flowname, flowdescription, file_id, number, status) VALUES  ( %s, %s, ( SELECT f.id_fil FROM public.files f WHERE f.filename = %s LIMIT 1), 0, FALSE );'''
+            sql_statement = '''INSERT INTO flow (flowname, flowdescription, file_id, number, status, final_state) VALUES  ( %s, %s, ( SELECT f.id_fil FROM public.files f WHERE f.filename = %s LIMIT 1), 0, FALSE, FALSE);'''
             cur.execute(sql_statement, [ flow['flow_name'], flow['flowdescription'], flow['filename'] ])    
             db.commit()
             flash('Flow {} created'.format(flow['flow_name']))

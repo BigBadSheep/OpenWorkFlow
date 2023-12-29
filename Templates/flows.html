@@ -201,7 +201,7 @@
     <div>
       <div>
         <div class="container">
-          aktualne flow
+          <h2> aktualne flow</h2>
           <table >
             <thead>
               <tr>
@@ -239,7 +239,7 @@
     </div>
 
     <div class="container">
-      stare flow
+      <h2> stare flow </h2>
       <table >
       
         <thead>
@@ -249,6 +249,7 @@
             <th >Flowdescription</th>
             <th >Plik</th>
             <th >Number</th>
+            <th> Końcowy stan</th>
             <th >Actions</th>
           </tr>
         </thead>
@@ -262,9 +263,11 @@
               <a href="{{ url_for('download_secret_file', name= true_flow.filename ) }}" role="button" target="_blank"> {{ true_flow.filename }} </a> 
             </td>
             <td> {{ true_flow.groupname }} </td>
+            <td> {{ true_flow.final_state }}</td>
             <td>
               <a href="{{ url_for('workflows_info', id_flo=true_flow.flow_id) }}" class="btn btn-primary btn-sm" role="button">Więcej informacji</a>
             </td>
+           
           </tr>
             {%endfor%}
            </tbody>
