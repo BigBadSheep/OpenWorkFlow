@@ -150,13 +150,37 @@
             color: #fff;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
         }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 5; 
+        }
+
+        .container2 {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            position: relative;
+            z-index: 6; 
+        }
+
+        #closeButton {
+            cursor: pointer;
+        }
     </style>
 </head>
 
 <body>
-    {% for message in get_flashed_messages() %}
-    <div> <p style="color:red">  {{message }} </p> </div>
-    {%endfor%}
+
 
     <div id="content">
         <div id="openBtn" onclick="toggleNav()">☰</div>

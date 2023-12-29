@@ -165,10 +165,44 @@
             color: #fff;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
         }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 5; 
+        }
+
+        .container2 {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            position: relative;
+            z-index: 6; 
+        }
+
+        #closeButton {
+            cursor: pointer;
+        }
     </style>
 </head>
 
 <body>
+    {% for message in get_flashed_messages() %}
+    <div id="overlay" class="overlay">
+        <div id="myModal" class="container2">
+            <p style="color:rgb(0, 0, 0)">{{ message }}</p>
+            <span id="closeButton" class="fas fa-times"></span>
+        </div>
+    </div>
+    {%endfor%}
     <div id="sidebar">
         <div class="close-btn" onclick="closeNav()">×</div>
         <a href="{{ url_for('add_file') }}">Dodaj nowy dokument</a>    
@@ -224,6 +258,20 @@
             document.getElementById("openBtn").style.left = "0";
         }
     </script>
+        <script>
+            function openModal() {
+                var overlay = document.getElementById('overlay');
+                overlay.style.display = 'flex';
+            }
+    
+            document.getElementById('closeButton').addEventListener('click', function () {
+                var overlay = document.getElementById('overlay');
+                overlay.style.display = 'none';
+            });
+            window.onload = function () {
+            openModal();
+            };
+        </script>
 </body>
 
 </html>
