@@ -94,6 +94,9 @@
 </head>
 
 <body>
+    {% for message in get_flashed_messages() %}
+    <div> <p style="color:red">  {{message }} </p> </div>
+    {%endfor%}
     <h1>Elektroniczny Obieg Dokumentów</h1>
     <div class="main-content">
         <h2>Zarządzaj dokumentami w prosty i wydajny sposób!</h2>

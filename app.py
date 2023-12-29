@@ -400,7 +400,7 @@ def new_user():
         if not message:
             user_pass = UserPass(user['user_name'], user['user_pass'])
             password_hash = user_pass.hash_password()
-            sql_statement = '''insert into users(username, email, password, is_active, is_admin) values(%s,%s,%s, True, False);'''
+            sql_statement = '''insert into users(username, email, password, is_active, is_admin, is_cyber) values(%s,%s,%s, True, False, False);'''
             cur.execute(sql_statement, [user['user_name'][:100], user['email'], password_hash])
             db.commit()
             flash('User {} created'.format(user['user_name']))
