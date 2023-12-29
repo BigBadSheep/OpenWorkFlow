@@ -1,32 +1,282 @@
 <!DOCTYPE html>
-<html> 
-    <head>
-        <title> new-flow </title>
-        <meta charset="="utf-8">
-    </head>
-    <body>
-        {% for message in get_flashed_messages() %}
-        <div> <p style="color:red">  {{message }} </p> </div>
-        {%endfor%}
-        <form id="add_group_flow" action="{{ url_for('add_group_flow') }}" method="POST">
-            <label> flow </label>   
-            <input list="flow_idb" name="flow_id" id="flow_id">
-            <datalist id="flow_idb">
-                {% for flow in flows %}
-                <option value="{{ flow.flowname }}">
-                {% endfor %}    
-            </datalist>
-            <br>
-            <label> grupa </label> 
-            <input list="group_idb" name="group_id" id="group_id">
-            <datalist id="group_idb">
-                {% for group in groups %}
-                <option value="{{ group.groupname }}">
-                {% endfor %}    
-            </datalist>
+<html lang="pl">
 
-            <br>
-            <label> value </label> <input type="number" id="value" name="value" >  <br>
-            <input type="submit"  value="Send"> <br>
-        </form>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formularz wysyłki dokumentu</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('https://foto-hosting.pl/img/eb/ad/90/ebad90b0ce7b02ba8a339182a43745427017b92b.jpeg');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+        }
+
+        h1 {
+            background-color: #5a9c65;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #406b46;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        #sidebar a {
+            padding: 15px 8px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #ffffff;
+            display: block;
+            transition: 0.3s;
+        }
+
+        #sidebar a:hover {
+            color: #5a9c65;
+        }
+
+        #sidebar .close-btn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 30px;
+            margin-left: 50px;
+            cursor: pointer;
+        }
+
+        #content {
+            transition: margin-left .5s;
+            padding: 16px;
+            margin-left: 0;
+        }
+
+        .btn-back {
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .btn-primary {
+            background-color: #5a9c65;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background-color: #406b46;
+        }
+
+        .fa-edit,
+        .fa-trash {
+            margin-right: 5px;
+        }
+
+        table {
+            width: 100%;
+        }
+
+        th {
+            background-color: #5a9c65;
+            color: #fff;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: center;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        a:hover {
+            color: inherit;
+        }
+
+        .container {
+            background-color: #fff;
+            width: 500px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        #openBtn {
+            font-size: 30px;
+            cursor: pointer;
+            position: fixed;
+            top: 50%;
+            left: 0;
+            margin-top: -15px;
+            padding: 15px;
+            background-color: #406b46;
+            color: #ffffff;
+            z-index: 2;
+            transition: left 0.5s;
+        }
+        #sidebar a.settings {
+            font-weight: bold;
+            background-color: #5a9c65;
+            color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 5; 
+        }
+
+        .container2 {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            position: relative;
+            z-index: 6; 
+        }
+
+        #closeButton {
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    {% for message in get_flashed_messages() %}
+    <div id="overlay" class="overlay">
+        <div id="myModal" class="container2">
+            <p style="color:rgb(0, 0, 0)">{{ message }}</p>
+            <span id="closeButton" class="fas fa-times"></span>
+        </div>
+    </div>
+    {%endfor%}
+    <div id="sidebar">
+        <div class="close-btn" onclick="closeNav()">×</div>
+        <a href="{{ url_for('new_user') }}">Rejestracja użytkowników</a>
+        <a href="{{ url_for('new_grp') }}">Dodawanie nowej grupy</a>
+        <a href="{{ url_for('admin_add_file') }}" class="settings">Dodaj nowy dokument</a>
+        <a href="{{ url_for('admin_new_flow') }}"> Prześlij dokument</a>
+        <a href="{{ url_for('admin_my_aprove') }}">Twoje dokumenty</a>
+        <a href="{{ url_for('admin_bugs') }}">Zgłoszenia użytkowników</a>
+        <a href="{{ url_for('users') }}">Zarządzanie użytkownikami</a>
+        <a href="{{ url_for('groups') }}">Zarządzanie grupami</a>
+        <a href="{{ url_for('admin_self_edit_user') }}">Ustawienia</a>
+    </div>
+
+    <div id="content">
+        <div id="openBtn" onclick="toggleNav()">☰</div>
+          <nav class="navbar navbar-expand-lg navbar-light bg-light">
+              <ul class="navbar-nav ml-auto">
+                  <li class="nav-item">
+                      <a class="nav-link" href="{{ url_for('logout') }}">Wyloguj</a>
+                  </li>
+              </ul>
+          </nav>
+  
+          <h1>add_grp_flow</h1>
+        </div>
+    </div>
+    <div>
+        <div>
+            <div class="container">
+                <form id="add_group_flow" action="{{ url_for('add_group_flow') }}" method="POST">
+                    <label> flow </label>   
+                    <input list="flow_idb" name="flow_id" id="flow_id">
+                    <datalist id="flow_idb">
+                        {% for flow in flows %}
+                    <option value="{{ flow.flowname }}">
+                        {% endfor %}    
+                    </datalist>
+                    <br>
+                    <label> grupa </label> 
+                    <input list="group_idb" name="group_id" id="group_id">
+                    <datalist id="group_idb">
+                        {% for group in groups %}
+                        <option value="{{ group.groupname }}">
+                        {% endfor %}    
+                    </datalist>
+
+                    <br>
+                    <label> value </label> <input type="number" id="value" name="value" >  <br>
+                    <input type="submit"  value="Send"> <br>
+                </form>
+            </div>
+        </div> 
+    </div> 
+
+
+
+        <script>
+            function toggleNav() {
+                var sidebar = document.getElementById("sidebar");
+                var content = document.getElementById("content");
+                var openBtn = document.getElementById("openBtn");
+    
+                if (sidebar.style.width === "250px") {
+                    closeNav();
+                } else {
+                    openNav();
+                }
+            }
+    
+            function openNav() {
+                document.getElementById("sidebar").style.width = "250px";
+                document.getElementById("content").style.marginLeft = "250px";
+                document.getElementById("openBtn").style.left = "250px";
+            }
+    
+            function closeNav() {
+                document.getElementById("sidebar").style.width = "0";
+                document.getElementById("content").style.marginLeft = "0";
+                document.getElementById("openBtn").style.left = "0";
+            }
+        </script>
+        <script>
+            function openModal() {
+                var overlay = document.getElementById('overlay');
+                overlay.style.display = 'flex';
+            }
+    
+            document.getElementById('closeButton').addEventListener('click', function () {
+                var overlay = document.getElementById('overlay');
+                overlay.style.display = 'none';
+            });
+            window.onload = function () {
+            openModal();
+            };
+        </script>
 </body>
+
+</html> 
