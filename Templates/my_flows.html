@@ -225,7 +225,6 @@
                 </li>
             </ul>
         </nav>
-          <h2> {{user_id}} </h2>
         <h1>Twoje dokumenty</h1>
       </div>
     </div>
@@ -251,11 +250,11 @@
             <tr>
               {% for false_flow in false_flows %}
   
-            <th scope="row">{{ false_flow.flow_id }}</th>
+            <th scope="row">{{ false_flow.ajdi_flo }}</th>
             <td>{{ false_flow.flowname }}</td>
             <td>{{ false_flow.flowdescription }}</td>
             <td> 
-              <a href="{{ url_for('download_secret_file', name= false_flow.filename ) }}" role="button" target="_blank"> {{ false_flow.filename }} </a>  <!-- te linki są do poprway-->
+              <a href="{{ url_for('download_secret_file', name= false_flow.filename ) }}" role="button" target="_blank"> {{ false_flow.filename }} </a> 
             </td>
             <td> {{ false_flow.groupname }} </td>
             <td> {{ false_flow.status }}  </td>
@@ -266,12 +265,12 @@
               </td>
               !-->
               <td>
-                <a href="{{ url_for('aprove', id_flo=false_flow.flow_id) }}" role="button">Przekaz dalej</a>
+                <a href="{{ url_for('aprove', id_flo=false_flow.ajdi_flo) }}" role="button">Przekaz dalej</a>
               </td>
   
             </tr>
             {%endfor%}
-          </tbody>
+          </tbody>  
         </table>
         </div>
       </div>
@@ -286,6 +285,7 @@
             <th >Flowdescription</th>
             <th >Plik</th>
             <th >Number</th>
+            <th> Zakończone powodzniem</th>
             <!--
             <th >Więcej informacji</th>
             !-->
@@ -302,6 +302,7 @@
                 <a href="{{ url_for('download_secret_file', name=true_flow.filename ) }}" role="button" target="_blank"> {{ true_flow.filename }} </a> 
               </td>
               <td> {{ true_flow.groupname }} </td>
+              <td> {{ true_flow.final_state }} </td>
             <!--
             <td>
               <a href="{{ url_for('flow_info', id_flo=true_flow.id_flo) }}" role="button">Więcej informacji</a>
