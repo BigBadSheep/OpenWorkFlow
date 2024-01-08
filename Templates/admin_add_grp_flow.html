@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formularz wysyłki dokumentu</title>
+    <title>Dodawanie grupy przepływu</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
     <style>
@@ -118,7 +118,7 @@
 
         .container {
             background-color: #fff;
-            width: 800px;
+            width: 500px;
             margin: 20px auto;
             padding: 20px;
             border-radius: 5px;
@@ -186,9 +186,9 @@
         <div class="close-btn" onclick="closeNav()">×</div>
         <a href="{{ url_for('new_user') }}">Rejestracja użytkowników</a>
         <a href="{{ url_for('new_grp') }}">Dodawanie nowej grupy</a>
-        <a href="{{ url_for('admin_add_grp_flow') }}" >Dodawanie grupy przepływu</a>
+        <a href="{{ url_for('admin_add_grp_flow') }}" class="settings">Dodawanie grupy przepływu</a>
         <a href="{{ url_for('admin_add_file') }}">Dodaj nowy dokument</a>
-        <a href="{{ url_for('admin_new_flow') }}"class="settings">Nowy przepływ</a>
+        <a href="{{ url_for('admin_new_flow') }}"> Nowy przepływ</a>
         <a href="{{ url_for('admin_my_aprove') }}">Twoje dokumenty</a>
         <a href="{{ url_for('admin_bugs') }}">Zgłoszenia użytkowników</a>
         <a href="{{ url_for('users') }}">Zarządzanie użytkownikami</a>
@@ -198,89 +198,85 @@
 
     <div id="content">
         <div id="openBtn" onclick="toggleNav()">☰</div>
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('logout') }}">Wyloguj</a>
-                </li>
-            </ul>
-        </nav>
+          <nav class="navbar navbar-expand-lg navbar-light bg-light">
+              <ul class="navbar-nav ml-auto">
+                  <li class="nav-item">
+                      <a class="nav-link" href="{{ url_for('logout') }}">Wyloguj</a>
+                  </li>
+              </ul>
+          </nav>
+  
+          <h1>Dodawanie grupy przepływu</h1>
 
-        <h1>Wysyłanie dokumentu</h1>
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <i class="fas fa-file-upload"></i> Wybierz i wyślij dokument
-                        </div>
-                        <div class="card-body">
-                            <form id="flow_form" action="{{ url_for('add_flow') }}" method="POST" enctype=multipart/form-data> 
-                                <div class="form-group">
-                                <label> Nazwa dokumentu </label> <input type="text" id="flow_name" name="flow_name" >  <br>
-                                </div>
-                                <div class="form-group">
-                                <label> Wybierz odbiorcę </label><input type="text" id="flowdescription" name="flowdescription"> <br>
-                                </div>
-                                <label> plik </label>           
-                                <input list="filenameb" name="filename" id="filename">
-                                <datalist id="filenameb">
-                                    {% for file in files %}
-                                    <option value="{{ file.filename }}">
-                                    {% endfor %}    
-                                </datalist>
-                                 <br>
-                                <!--  <label> group_id </label> <input type="text" id="group_id" name="group_id" >  <br> !-->
-                                
-                                <br>
-                                <input type="submit"  value="Wyślij"> <br>
-                            </form>
-                        </div>
-                    </div>
+          <br>
+            <div>
+                <div class="container">
+                    <form id="add_group_flow" action="{{ url_for('add_group_flow') }}" method="POST">
+                        <label> Przepływ </label>   
+                        <input list="flow_idb" name="flow_id" id="flow_id">
+                        <datalist id="flow_idb">
+                            {% for flow in flows %}
+                        <option value="{{ flow.flowname }}">
+                            {% endfor %}    
+                        </datalist>
+                        <br>
+                        <label> Grupa </label> 
+                        <input list="group_idb" name="group_id" id="group_id">
+                        <datalist id="group_idb">
+                            {% for group in groups %}
+                            <option value="{{ group.groupname }}">
+                            {% endfor %}    
+                        </datalist>
+
+                        <br>
+                        <label> Wartość </label> <input type="number" id="value" name="value" >  <br>
+                        <input type="submit"  value="Send"> <br>
+                    </form>
                 </div>
-            </div>
-        </div>
+            </div> 
+        </div> 
     </div>
 
-    <script>
-        function toggleNav() {
-            var sidebar = document.getElementById("sidebar");
-            var content = document.getElementById("content");
-            var openBtn = document.getElementById("openBtn");
 
-            if (sidebar.style.width === "250px") {
-                closeNav();
-            } else {
-                openNav();
+        <script>
+            function toggleNav() {
+                var sidebar = document.getElementById("sidebar");
+                var content = document.getElementById("content");
+                var openBtn = document.getElementById("openBtn");
+    
+                if (sidebar.style.width === "250px") {
+                    closeNav();
+                } else {
+                    openNav();
+                }
             }
-        }
-
-        function openNav() {
-            document.getElementById("sidebar").style.width = "250px";
-            document.getElementById("content").style.marginLeft = "250px";
-            document.getElementById("openBtn").style.left = "250px";
-        }
-
-        function closeNav() {
-            document.getElementById("sidebar").style.width = "0";
-            document.getElementById("content").style.marginLeft = "0";
-            document.getElementById("openBtn").style.left = "0";
-        }
-    </script>
-    <script>
-        function openModal() {
-            var overlay = document.getElementById('overlay');
-            overlay.style.display = 'flex';
-        }
-
-        document.getElementById('closeButton').addEventListener('click', function () {
-            var overlay = document.getElementById('overlay');
-            overlay.style.display = 'none';
-        });
-        window.onload = function () {
-        openModal();
-        };
-    </script>
+    
+            function openNav() {
+                document.getElementById("sidebar").style.width = "250px";
+                document.getElementById("content").style.marginLeft = "250px";
+                document.getElementById("openBtn").style.left = "250px";
+            }
+    
+            function closeNav() {
+                document.getElementById("sidebar").style.width = "0";
+                document.getElementById("content").style.marginLeft = "0";
+                document.getElementById("openBtn").style.left = "0";
+            }
+        </script>
+        <script>
+            function openModal() {
+                var overlay = document.getElementById('overlay');
+                overlay.style.display = 'flex';
+            }
+    
+            document.getElementById('closeButton').addEventListener('click', function () {
+                var overlay = document.getElementById('overlay');
+                overlay.style.display = 'none';
+            });
+            window.onload = function () {
+            openModal();
+            };
+        </script>
 </body>
 
 </html> 

@@ -994,6 +994,64 @@ def delete_group_member(id_gro):
     cur.execute(sql_statement, [id_gro])
     db.commit()
     return redirect(url_for('groups'))
+@app.route('/admin_add_grp_flow/', methods=['GET', 'POST'])
+def admin_add_grp_flow():
+
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
+        return redirect(url_for('login'))    
+
+    db = get_db()
+    message = None
+    grop_add = {}
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    if request.method == 'GET':
+        
+        sql_command = 'SELECT id_grp, groupname FROM groups;'
+        cur.execute(sql_command)
+        groups=cur.fetchall()
+
+        sql_command = 'SELECT id_flo, flowname FROM flow;'
+        cur.execute(sql_command)
+        flows=cur.fetchall()  
+        
+        return render_template('admin_add_grp_flow.html', active_menu='admin_add_grp_flow', flows=flows, login=login, groups=groups)
+    else: 
+        grop_add['flow_id'] = '' if not 'flow_id' in request.form else request.form['flow_id']
+        grop_add['group_id'] = '' if not 'group_id' in request.form else request.form['group_id']
+        grop_add['value'] = '' if not 'value' in request.form else request.form['value']
+    
+        if grop_add['flow_id'] == '':
+            message = 'Przepływ nie może być pusty'  
+        elif grop_add['group_id'] == '':
+            message = 'Identyfikator grupy nie może być pusty'
+        elif grop_add['value'] == '':
+            message = 'Identyfikator wartości nie może być pusty'     #trzeba sprawdzic czy taka wrtosc jest wolna dla danego flow       
+    
+        if not message:
+            sql_statement = '''
+    INSERT INTO approval_table (flow_id, group_id, value) 
+    SELECT f.id_flo, g.id_grp, %s 
+    FROM public.flow f 
+    JOIN public.groups g ON f.flowname = %s 
+    WHERE g.groupname = %s 
+    AND NOT EXISTS (
+        SELECT 1 FROM public.approval_table at 
+        WHERE at.flow_id = f.id_flo AND at.group_id = g.id_grp
+    );
+'''
+            cur.execute(sql_statement, [ grop_add['value'], grop_add['flow_id'], grop_add['group_id'] ]) 
+            db.commit()
+            flash('Dodaj grupę {} do flow'.format(grop_add['group_id']))
+            return redirect(url_for('workflows'))
+        
+        else:
+            flash('Wystąpił błąd: {}'.format(message))
+            return render_template('admin_add_grp_flow.html', active_menu='add_grp_mem', grop_add=grop_add, login=login)
+
 
 @app.route('/add_group_flow/', methods=['GET', 'POST'])
 def add_group_flow():
@@ -1034,8 +1092,8 @@ def add_group_flow():
     
         if not message:
             sql_statement = '''
-    INSERT INTO approval_table (flow_id, group_id, value) 
-    SELECT f.id_flo, g.id_grp, %s 
+    INSERT INTO approval_table (flow_id, group_id, value,description) 
+    SELECT f.id_flo, g.id_grp, %s, 'brak'
     FROM public.flow f 
     JOIN public.groups g ON f.flowname = %s 
     WHERE g.groupname = %s 
@@ -1163,7 +1221,7 @@ def add_file():
                 return redirect(request.url)
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
-                secretfilename = str(time.time()+14123)+filename #randrange(10)  trzeba polosować raczej
+                secretfilename = str(random.randrange(1, 1231237612783))+filename #randrange(10)  trzeba polosować raczej
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], secretfilename))
 
 
@@ -1278,8 +1336,13 @@ def admin_my_aprove():
         user_id = result[0]  
 
     sql_command = '''
-    WITH RankedApproval AS (
-    SELECT
+	select wszystko.id_flo as ajdi_flo, min, flowname, flowdescription, number, filename, description, groupname, status   from (
+--statusy userow 
+select id_flo, min(value) from 
+   (
+	   SELECT
+	u.id_use,
+	   f.id_flo,
         f.flowname,
         f.flowdescription,
         fl.filename,
@@ -1289,8 +1352,7 @@ def admin_my_aprove():
         at.group_id,
         at.value,
         f.number,
-        at.description,
-        ROW_NUMBER() OVER (PARTITION BY f.id_flo ORDER BY at.value) AS rn
+        at.description
     FROM
         public.flow f
     INNER JOIN
@@ -1305,29 +1367,58 @@ def admin_my_aprove():
         public.groups g ON gm.group_id = g.id_grp
     WHERE
         f.status = FALSE
-        AND u.id_use = %s
-)
-SELECT
-    flowname,
-    flowdescription,
-    filename,
-    groupname,
-    status,
-    flow_id,
-    group_id,
-    value,
-    number,
-    description
-FROM
-    RankedApproval
-WHERE
-    rn = 1;
+      AND u.id_use = %s
+   ) t
+		group by id_flo		
+	intersect
+		select id_flo, min(value) from 
+   (
+	   SELECT
+	u.id_use,
+	   f.id_flo,
+        f.flowname,
+        f.flowdescription,
+        fl.filename,
+        g.groupname,
+        f.status,
+        at.flow_id,
+        at.group_id,
+        at.value,
+        f.number,
+        at.description
+    FROM
+        public.flow f
+    INNER JOIN
+        public.files fl ON f.file_id = fl.id_fil
+    INNER JOIN
+        public.approval_table at ON f.id_flo = at.flow_id
+    INNER JOIN
+        public.group_members gm ON at.group_id = gm.group_id
+    INNER JOIN
+        public.users u ON gm.user_id = u.id_use
+    INNER JOIN
+        public.groups g ON gm.group_id = g.id_grp
+    WHERE
+        f.status = FALSE
+	   and at.value > f.number  
+   ) t
+		group by id_flo
+	) wszystko
+	INNER JOIN
+        public.flow fl ON wszystko.id_flo = fl.id_flo
+	INNER JOIN
+        public.approval_table ap ON wszystko.id_flo = ap.flow_id
+	INNER JOIN
+        public.groups g ON ap.group_id = g.id_grp
+	INNER JOIN
+        public.files fil ON fl.file_id = fil.id_fil
+    where ap.value=min ;   
 '''
     
     cur.execute(sql_command, [user_id])
 
     false_flows=cur.fetchall()
-
+    #flash(false_flows)
     sql_command = '''
     WITH RankedApproval AS (
     SELECT
@@ -1341,6 +1432,7 @@ WHERE
         at.value,
         f.number,
         at.description,
+        f.final_state,
         ROW_NUMBER() OVER (PARTITION BY f.id_flo ORDER BY at.value) AS rn
     FROM
         public.flow f
@@ -1368,7 +1460,8 @@ SELECT
     group_id,
     value,
     number,
-    description
+    description,
+    final_state
 FROM
     RankedApproval
 WHERE
@@ -1379,7 +1472,7 @@ WHERE
 
     true_flows=cur.fetchall()
 
-    return render_template('admin_my_flows.html', false_flows=false_flows, login=login, true_flows=true_flows) 
+    return render_template('admin_my_flows.html', false_flows=false_flows, login=login, true_flows=true_flows, user_id=user_id) 
 
 @app.route('/my_aprove')
 def my_aprove():
@@ -1390,8 +1483,6 @@ def my_aprove():
         flash(f'Użytkownik {login.user} nie aktywny')
         return redirect(url_for('login'))
 
-  
-
     db = get_db()
     cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute('SELECT id_use FROM users where username=%s',[login.user])
@@ -1400,8 +1491,13 @@ def my_aprove():
         user_id = result[0]  
 
     sql_command = '''
-    WITH RankedApproval AS (
-    SELECT
+	select wszystko.id_flo as ajdi_flo, min, flowname, flowdescription, number, filename, description, groupname, status   from (
+--statusy userow 
+select id_flo, min(value) from 
+   (
+	   SELECT
+	u.id_use,
+	   f.id_flo,
         f.flowname,
         f.flowdescription,
         fl.filename,
@@ -1411,8 +1507,7 @@ def my_aprove():
         at.group_id,
         at.value,
         f.number,
-        at.description,
-        ROW_NUMBER() OVER (PARTITION BY f.id_flo ORDER BY at.value) AS rn
+        at.description
     FROM
         public.flow f
     INNER JOIN
@@ -1427,29 +1522,58 @@ def my_aprove():
         public.groups g ON gm.group_id = g.id_grp
     WHERE
         f.status = FALSE
-        AND u.id_use = %s
-)
-SELECT
-    flowname,
-    flowdescription,
-    filename,
-    groupname,
-    status,
-    flow_id,
-    group_id,
-    value,
-    number,
-    description
-FROM
-    RankedApproval
-WHERE
-    rn = 1;
+      AND u.id_use = %s
+   ) t
+		group by id_flo		
+	intersect
+		select id_flo, min(value) from 
+   (
+	   SELECT
+	u.id_use,
+	   f.id_flo,
+        f.flowname,
+        f.flowdescription,
+        fl.filename,
+        g.groupname,
+        f.status,
+        at.flow_id,
+        at.group_id,
+        at.value,
+        f.number,
+        at.description
+    FROM
+        public.flow f
+    INNER JOIN
+        public.files fl ON f.file_id = fl.id_fil
+    INNER JOIN
+        public.approval_table at ON f.id_flo = at.flow_id
+    INNER JOIN
+        public.group_members gm ON at.group_id = gm.group_id
+    INNER JOIN
+        public.users u ON gm.user_id = u.id_use
+    INNER JOIN
+        public.groups g ON gm.group_id = g.id_grp
+    WHERE
+        f.status = FALSE
+	   and at.value > f.number  
+   ) t
+		group by id_flo
+	) wszystko
+	INNER JOIN
+        public.flow fl ON wszystko.id_flo = fl.id_flo
+	INNER JOIN
+        public.approval_table ap ON wszystko.id_flo = ap.flow_id
+	INNER JOIN
+        public.groups g ON ap.group_id = g.id_grp
+	INNER JOIN
+        public.files fil ON fl.file_id = fil.id_fil
+    where ap.value=min ;   
 '''
     
     cur.execute(sql_command, [user_id])
 
     false_flows=cur.fetchall()
-
+    #flash(false_flows)
     sql_command = '''
     WITH RankedApproval AS (
     SELECT
@@ -1463,6 +1587,7 @@ WHERE
         at.value,
         f.number,
         at.description,
+        f.final_state,
         ROW_NUMBER() OVER (PARTITION BY f.id_flo ORDER BY at.value) AS rn
     FROM
         public.flow f
@@ -1490,7 +1615,8 @@ SELECT
     group_id,
     value,
     number,
-    description
+    description,
+    final_state
 FROM
     RankedApproval
 WHERE
@@ -1501,7 +1627,7 @@ WHERE
 
     true_flows=cur.fetchall()
 
-    return render_template('my_flows.html', false_flows=false_flows, login=login, true_flows=true_flows) 
+    return render_template('my_flows.html', false_flows=false_flows, login=login, true_flows=true_flows, user_id=user_id) 
 
 
 
@@ -1518,14 +1644,6 @@ def aprove(id_flo):
     message = None
     action = {}
     cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute('SELECT id_use FROM users where username=%s',[login.user])
-    result = cur.fetchone()
-    if result is not None:
-        user_id = result[0]
-
-    #cur.execute(sql_command,[id_flo])
-    #infos=cur.fetchall() 
-
 
     if request.method == 'GET':
         sql_command = 'SELECT f.id_flo, f.flowname, f.flowdescription, fl.filename, f.number, f.status FROM flow f INNER JOIN files fl ON f.file_id = fl.id_fil where f.id_flo=%s;'
@@ -1533,12 +1651,10 @@ def aprove(id_flo):
         flows=cur.fetchall() 
         
         #sql_command2 = 'SELECT id_app, flow_id, group_id, value FROM approval_table;'
-        sql_command2 = 'SELECT g.groupname, at.value, at.description FROM public.flow f JOIN public.approval_table at ON f.id_flo = at.flow_id JOIN public.groups g ON at.group_id = g.id_grp WHERE f.id_flo = %s ORDER BY at.value ASC;'
-        
-        
-        cur.execute(sql_command2,[id_flo])
+        sql_command = 'SELECT g.groupname, at.value, at.description FROM public.flow f JOIN public.approval_table at ON f.id_flo = at.flow_id JOIN public.groups g ON at.group_id = g.id_grp WHERE f.id_flo = %s ORDER BY at.value ASC;'
+        cur.execute(sql_command,[id_flo])
         approvals=cur.fetchall() 
-
+        
         return render_template('aproval_info.html', active_menu='users', flows=flows, login=login, approvals=approvals, action=action, ajdik_flow=id_flo)
     else:
         action['komentarz'] = '' if not 'komentarz' in request.form else request.form['komentarz']
@@ -1548,60 +1664,81 @@ def aprove(id_flo):
         
         if action['opcja'] == '':
             message = 'Opcja nie może być pusta'
-
-        
         
         if not message:
-            sql_statement1 = 'SELECT at.id_app number FROM public.flow f JOIN public.approval_table at ON f.id_flo = at.flow_id JOIN public.groups g ON at.group_id = g.id_grp WHERE f.id_flo = 2 and at.value=number ORDER BY at.value ASC ;'
-            cur.execute(sql_statement1, [id_flo])
-            id_app=result = cur.fetchone()
+            
+            sql_command = 'SELECT f.number FROM flow f INNER JOIN files fl ON f.file_id = fl.id_fil where f.id_flo=%s;'
+            cur.execute(sql_command,[id_flo])
+            aktualny_numer=cur.fetchone() 
 
+            sql_command = 'SELECT at.value FROM public.flow f JOIN public.approval_table at ON f.id_flo = at.flow_id JOIN public.groups g ON at.group_id = g.id_grp WHERE f.id_flo = %s ORDER BY at.value ASC;'
+            cur.execute(sql_command,[id_flo])
+            numery_w_tabeli=cur.fetchall() 
+            aktualny_numer=aktualny_numer[0]
+            pojedycza_tabela = [item for sublist in numery_w_tabeli for item in sublist]
+            #flash(str(aktualny_numer)+"a to sa numery w tebeli"+str(pojedycza_tabela))
+            
+            pomonick=0
+
+
+            for element in pojedycza_tabela:
+                if element > aktualny_numer:
+                    #flash("Kolejna większa wartość dla"+str(aktualny_numer)+ "to:"+ str(element))
+                    break
+            
+            sql_statement = 'select id_app from approval_table WHERE value =%s and flow_id=%s ;'
+            cur.execute(sql_statement, [element, id_flo[0]])
+            id_app = cur.fetchone()
+            #flash("element "+str(element[0]) + "   id_flo"+str(id_flo)+ "   id_app"+str(id_app[0]))
+            
             if action['opcja']=='Akceptacja':
-                sql_statement2 = '''SELECT
-                MIN(at.value) AS next_min_greater_value
-                FROM
-                    public.flow f
-                JOIN
-                    public.approval_table at ON f.id_flo = at.flow_id
-                JOIN
-                    public.groups g ON at.group_id = g.id_grp
-                WHERE
-                    f.id_flo = %s
-                    AND at.value > f.number
-                GROUP BY
-                    g.groupname, at.description
-
-                '''
-                cur.execute(sql_statement2, [id_flo])
-                idki=result = cur.fetchone()
+            
+                sql_statement2 = 'UPDATE approval_table SET description = %s WHERE id_app = %s;'
+                #flash("to sie zrobilo! :komentarz "+str(action['komentarz']) +  "  id_app"+str(id_app[0]))
+                cur.execute(sql_statement2, [action['komentarz'],id_app[0]])
+                db.commit() 
+                sql_statement = 'UPDATE flow SET number = %s WHERE id_flo = %s;'
+                cur.execute(sql_statement, [element,id_flo[0]])
+                db.commit()
                 
-                if idki is None:
-                # Execute SQL statement when idki is None
-                    sql_statement1 = 'UPDATE approval_table SET description = %s WHERE id_app = %s;'
-                    cur.execute(sql_statement1, [action['komentarz'],id_app[0]])
-                    db.commit()
-                    sql_statement2 = 'UPDATE public.flow SET status = TRUE WHERE id_flo = %s;'
+                sql_command = 'SELECT f.number FROM flow f INNER JOIN files fl ON f.file_id = fl.id_fil where f.id_flo=%s;'
+                cur.execute(sql_command,[id_flo])
+                aktualny_numer=cur.fetchone() 
+
+                sql_command = 'SELECT at.value FROM public.flow f JOIN public.approval_table at ON f.id_flo = at.flow_id JOIN public.groups g ON at.group_id = g.id_grp WHERE f.id_flo = %s ORDER BY at.value ASC;'
+                cur.execute(sql_command,[id_flo])
+                numery_w_tabeli=cur.fetchall() 
+                aktualny_numer=aktualny_numer[0]
+                pojedycza_tabela = [item for sublist in numery_w_tabeli for item in sublist]
+                
+                for element in pojedycza_tabela:
+                    if element > aktualny_numer:
+                        #flash("Kolejna większa wartość dla"+str(aktualny_numer)+ "to:"+ str(element))
+                        break
+                else:
+                    # koniec flow
+                    sql_statement2 = 'UPDATE flow SET status = TRUE, final_state=TRUE WHERE id_flo = %s;'
                     cur.execute(sql_statement2, [id_flo])
                     db.commit()
-                else:
-                    sql_statement1 = 'UPDATE approval_table SET description = %s WHERE id_app = %s;'
-                    cur.execute(sql_statement1, [action['komentarz'],id_app[0]])
-                    db.commit()
-                    sql_statement2 = 'UPDATE flow SET number = %s WHERE id_flo = %s;'
-                    cur.execute(sql_statement2,[idki[0], id_flo] )
-                    db.commit()
+                    #flash("Brak kolejnej większej wartości dla {aktualny_numer}")
+                    pomonick=1
+                    flash('Flow zakończony powodzeniem')
+                    
             else:
-                sql_statement1 = 'UPDATE approval_table SET description = %s WHERE id_app = %s;'
-                cur.execute(sql_statement1, [action['komentarz'],id_app[0]])
+                sql_statement = 'UPDATE approval_table SET description = %s WHERE id_app = %s;'
+                #flash("to sie zrobilo! :komentarz "+str(action['komentarz']) +  "  id_app"+str(id_app[0]))
+                cur.execute(sql_statement, [action['komentarz'],id_app[0]])
+                db.commit() 
+                sql_statement = 'UPDATE flow SET status = TRUE, final_state=FALSE WHERE id_flo = %s;'
+                cur.execute(sql_statement, [id_flo])
                 db.commit()
-                sql_statement2 = 'UPDATE flow SET status = TRUE WHERE id_flo = %s;'
-                cur.execute(sql_statement2, [id_flo])
-                db.commit()
+                pomonick=1
+                flash('Flow zostaralo odrzucone {}'.format(action))
             
-            #db.commit()
-            flash('Dokonano {} update'.format(action))
+            if pomonick==0:
+                flash('Dokonano {} update'.format(action))
 
-            return redirect(url_for('menu'))
+            return redirect(url_for('my_aprove'))
         else:
             flash('Wystąpił błąd: {}'.format(message))
             return render_template('aproval_info.html', flows=flows, login=login, approvals=approvals, action=action)

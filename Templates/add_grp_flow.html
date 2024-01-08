@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formularz wysyłki dokumentu</title>
+    <title>Dodawanie grupy przepływu</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
     <style>
@@ -184,15 +184,12 @@
     {%endfor%}
     <div id="sidebar">
         <div class="close-btn" onclick="closeNav()">×</div>
-        <a href="{{ url_for('new_user') }}">Rejestracja użytkowników</a>
-        <a href="{{ url_for('new_grp') }}">Dodawanie nowej grupy</a>
-        <a href="{{ url_for('admin_add_file') }}" class="settings">Dodaj nowy dokument</a>
-        <a href="{{ url_for('admin_new_flow') }}"> Prześlij dokument</a>
-        <a href="{{ url_for('admin_my_aprove') }}">Twoje dokumenty</a>
-        <a href="{{ url_for('admin_bugs') }}">Zgłoszenia użytkowników</a>
-        <a href="{{ url_for('users') }}">Zarządzanie użytkownikami</a>
-        <a href="{{ url_for('groups') }}">Zarządzanie grupami</a>
-        <a href="{{ url_for('admin_self_edit_user') }}">Ustawienia</a>
+        <a href="{{ url_for('add_file') }}">Dodaj nowy dokument</a>    
+        <a href="{{ url_for('new_flow') }}">Nowy przepływt</a>
+        <a href="{{ url_for('add_grp_flow') }}" class="settings">Dodawanie grupy przepływu</a>
+        <a href="{{ url_for('my_aprove') }}">Twoje dokumenty</a>
+        <a href="{{ url_for('new_bugs') }}">Dodaj zgłoszenie</a>
+        <a href="{{ url_for('self_edit_user') }}" >Ustawienia</a>
     </div>
 
     <div id="content">
@@ -205,37 +202,36 @@
               </ul>
           </nav>
   
-          <h1>add_grp_flow</h1>
-        </div>
-    </div>
-    <div>
-        <div>
-            <div class="container">
-                <form id="add_group_flow" action="{{ url_for('add_group_flow') }}" method="POST">
-                    <label> flow </label>   
-                    <input list="flow_idb" name="flow_id" id="flow_id">
-                    <datalist id="flow_idb">
-                        {% for flow in flows %}
-                    <option value="{{ flow.flowname }}">
-                        {% endfor %}    
-                    </datalist>
-                    <br>
-                    <label> grupa </label> 
-                    <input list="group_idb" name="group_id" id="group_id">
-                    <datalist id="group_idb">
-                        {% for group in groups %}
-                        <option value="{{ group.groupname }}">
-                        {% endfor %}    
-                    </datalist>
+          <h1>Dodawanie grupy przepływu</h1>
 
-                    <br>
-                    <label> value </label> <input type="number" id="value" name="value" >  <br>
-                    <input type="submit"  value="Send"> <br>
-                </form>
-            </div>
+          <br>
+            <div>
+                <div class="container">
+                    <form id="add_group_flow" action="{{ url_for('add_group_flow') }}" method="POST">
+                        <label> Przepływ </label>   
+                        <input list="flow_idb" name="flow_id" id="flow_id">
+                        <datalist id="flow_idb">
+                            {% for flow in flows %}
+                        <option value="{{ flow.flowname }}">
+                            {% endfor %}    
+                        </datalist>
+                        <br>
+                        <label> Grupa </label> 
+                        <input list="group_idb" name="group_id" id="group_id">
+                        <datalist id="group_idb">
+                            {% for group in groups %}
+                            <option value="{{ group.groupname }}">
+                            {% endfor %}    
+                        </datalist>
+
+                        <br>
+                        <label> Wartość </label> <input type="number" id="value" name="value" >  <br>
+                        <input type="submit"  value="Send"> <br>
+                    </form>
+                </div>
+            </div> 
         </div> 
-    </div> 
-
+    </div>
 
 
         <script>
