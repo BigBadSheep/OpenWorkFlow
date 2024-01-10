@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Pliki</title>
+    <title>Wszystkie dokumenty</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
@@ -180,13 +180,35 @@
 </head>
 
 <body>
-
+    {% for message in get_flashed_messages() %}
+    <div id="overlay" class="overlay">
+        <div id="myModal" class="container2">
+            <p style="color:rgb(0, 0, 0)">{{ message }}</p>
+            <span id="closeButton" class="fas fa-times"></span>
+        </div>
+    </div>
+    {%endfor%}
+    <div id="sidebar">
+        <div class="close-btn" onclick="closeNav()">×</div>
+        <a href="{{ url_for('new_user') }}">Rejestracja użytkowników</a>
+        <a href="{{ url_for('new_grp') }}">Dodawanie nowej grupy</a>
+        <a href="{{ url_for('admin_add_grp_flow') }}" >Dodawanie grupy przepływu</a>
+        <a href="{{ url_for('admin_add_file') }}" >Dodaj nowy dokument</a>
+        <a href="{{ url_for('admin_my_aprove') }}"> Nowy przepływ</a>
+        <a href="{{ url_for('workflows') }}"> Przepływy prac </a> 
+        <a href="{{ url_for('admin_flows') }}">Twoje dokumenty</a>
+        <a href="{{ url_for('files') }}"class="settings"> Wszystkie dokumenty</a>
+        <a href="{{ url_for('admin_bugs') }}">Zgłoszenia użytkowników</a>
+        <a href="{{ url_for('users') }}">Zarządzanie użytkownikami</a>
+        <a href="{{ url_for('groups') }}">Zarządzanie grupami</a>
+        <a href="{{ url_for('admin_self_edit_user') }}">Ustawienia</a>
+    </div>
 
     <div id="content">
         <div id="openBtn" onclick="toggleNav()">☰</div>
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <div id="userWelcome">
-                
+                Witaj,
             </div>
             <ul class="navbar-nav ml-auto">
                 <li class="nav-item">
@@ -195,14 +217,14 @@
             </ul>
         </nav>
 
-        <h1>Pliki</h1>
+        <h1>Edit Users</h1>
         <div class="container">
             <table class="table table-bordered">
                 <thead>
                     <tr>
-                        <th>filename</th>
-                        <th>filepath</th>
-                        <th>uploder</th>
+                        <th>Opis</th>
+                        <th>Nazwa</th>
+                        <th>Autor</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -223,7 +245,45 @@
 
         </div>
     </div>
+    <script>
+        function toggleNav() {
+            var sidebar = document.getElementById("sidebar");
+            var content = document.getElementById("content");
+            var openBtn = document.getElementById("openBtn");
 
+            if (sidebar.style.width === "250px") {
+                closeNav();
+            } else {
+                openNav();
+            }
+        }
+
+        function openNav() {
+            document.getElementById("sidebar").style.width = "250px";
+            document.getElementById("content").style.marginLeft = "250px";
+            document.getElementById("openBtn").style.left = "250px";
+        }
+
+        function closeNav() {
+            document.getElementById("sidebar").style.width = "0";
+            document.getElementById("content").style.marginLeft = "0";
+            document.getElementById("openBtn").style.left = "0";
+        }
+    </script>
+        <script>
+            function openModal() {
+                var overlay = document.getElementById('overlay');
+                overlay.style.display = 'flex';
+            }
+    
+            document.getElementById('closeButton').addEventListener('click', function () {
+                var overlay = document.getElementById('overlay');
+                overlay.style.display = 'none';
+            });
+            window.onload = function () {
+            openModal();
+            };
+        </script>
 
 </body>
 
