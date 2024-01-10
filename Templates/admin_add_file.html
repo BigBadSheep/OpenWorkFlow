@@ -217,7 +217,7 @@
                 <i class="fas fa-file-upload"></i> Wybierz i dodaj dokument
             </div>
             <br>
-            <form id="add_file" action="{{ url_for('add_file') }}" method="POST" enctype=multipart/form-data>
+            <form id="add_file" action="{{ url_for('admin_add_file') }}" method="POST" enctype=multipart/form-data>
                 <div class="form-group">
                 <label> Nazwa pliku </label> <input type="text" id="publicfilename" name="publicfilename" >
                 </div>
