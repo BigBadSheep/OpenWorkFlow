@@ -1899,7 +1899,7 @@ def admin_aprove(id_flo):
             #db.commit()
             flash('Dokonano {} update'.format(action))
 
-            return redirect(url_for('menu'))
+            return redirect(url_for('admin_menu'))
         else:
             flash('Wystąpił błąd: {}'.format(message))
             return render_template('admin_aproval_info.html', flows=flows, login=login, approvals=approvals, action=action)
