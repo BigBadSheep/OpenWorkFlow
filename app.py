@@ -627,7 +627,7 @@ WHERE
 
     true_flows=cur2.fetchall()
 
-    return render_template('flows.html', active_menu='users', true_flows=true_flows, login=login, false_flows=false_flows)
+    return render_template('admin_flows.html', active_menu='users', true_flows=true_flows, login=login, false_flows=false_flows)
 
 
 @app.route('/flow_info/<id_flo>', methods=['GET', 'POST']) 
@@ -994,6 +994,66 @@ def delete_group_member(id_gro):
     cur.execute(sql_statement, [id_gro])
     db.commit()
     return redirect(url_for('groups'))
+
+@app.route('/add_grp_flow/', methods=['GET', 'POST'])
+def add_grp_flow():
+
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        flash(f'Użytkownik {login.user} nie jest adminem')
+        return redirect(url_for('login'))    
+
+    db = get_db()
+    message = None
+    grop_add = {}
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    if request.method == 'GET':
+        
+        sql_command = 'SELECT id_grp, groupname FROM groups;'
+        cur.execute(sql_command)
+        groups=cur.fetchall()
+
+        sql_command = 'SELECT id_flo, flowname FROM flow;'
+        cur.execute(sql_command)
+        flows=cur.fetchall()  
+        
+        return render_template('add_grp_flow.html', active_menu='add_grp_flow', flows=flows, login=login, groups=groups)
+    else: 
+        grop_add['flow_id'] = '' if not 'flow_id' in request.form else request.form['flow_id']
+        grop_add['group_id'] = '' if not 'group_id' in request.form else request.form['group_id']
+        grop_add['value'] = '' if not 'value' in request.form else request.form['value']
+    
+        if grop_add['flow_id'] == '':
+            message = 'Przepływ nie może być pusty'  
+        elif grop_add['group_id'] == '':
+            message = 'Identyfikator grupy nie może być pusty'
+        elif grop_add['value'] == '':
+            message = 'Identyfikator wartości nie może być pusty'     #trzeba sprawdzic czy taka wrtosc jest wolna dla danego flow       
+    
+        if not message:
+            sql_statement = '''
+    INSERT INTO approval_table (flow_id, group_id, value) 
+    SELECT f.id_flo, g.id_grp, %s 
+    FROM public.flow f 
+    JOIN public.groups g ON f.flowname = %s 
+    WHERE g.groupname = %s 
+    AND NOT EXISTS (
+        SELECT 1 FROM public.approval_table at 
+        WHERE at.flow_id = f.id_flo AND at.group_id = g.id_grp
+    );
+'''
+            cur.execute(sql_statement, [ grop_add['value'], grop_add['flow_id'], grop_add['group_id'] ]) 
+            db.commit()
+            flash('Dodaj grupę {} do flow'.format(grop_add['group_id']))
+            return redirect(url_for('workflows'))
+        
+        else:
+            flash('Wystąpił błąd: {}'.format(message))
+            return render_template('add_grp_flow.html', active_menu='add_grp_mem', grop_add=grop_add, login=login)
+
+
 @app.route('/admin_add_grp_flow/', methods=['GET', 'POST'])
 def admin_add_grp_flow():
 
@@ -1238,7 +1298,7 @@ def add_file():
             return redirect(url_for('add_file'))
         else:
             flash('Wystąpił błąd: {}'.format(message))
-            return render_template('mian.html', active_menu='new_file', data=data, login=login)
+            return render_template('add_file.html', active_menu='new_file', data=data, login=login)
 
 
 @app.route('/admin_add_file', methods=['GET', 'POST'])

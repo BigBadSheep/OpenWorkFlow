@@ -92,6 +92,14 @@
             border-radius: 3px;
         }
 
+        input[type="password2"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
         input[type="submit"] {
             background-color: #5a9c65;
             color: #fff;
@@ -210,6 +218,7 @@
         <a href="{{ url_for('admin_add_grp_flow') }}" >Dodawanie grupy przepływu</a>
         <a href="{{ url_for('admin_add_file') }}" >Dodaj nowy dokument</a>
         <a href="{{ url_for('admin_new_flow') }}"> Nowy przepływ</a>
+        <a href="{{ url_for('workflows') }}"> Przepływy prac </a> 
         <a href="{{ url_for('admin_my_aprove') }}">Twoje dokumenty</a>
         <a href="{{ url_for('admin_bugs') }}">Zgłoszenia użytkowników</a>
         <a href="{{ url_for('users') }}">Zarządzanie użytkownikami</a>
@@ -232,7 +241,7 @@
             <div class="form-group">
                 <label> E-mail </label><input type="text" id="email" name="email" value="{{user.email}}" class="form-control"> <br>
                 <label> Hasło </label><input type="password" id="user_pass" name="user_pass" class="form-control"> <br> 
-                <label> Powtórz hasło </label> <input type="password2" id="user_pass2" name="user_pass2" class="form-control"> <br> 
+                <label> Powtórz hasło </label> <input type="password" id="user_pass2" name="user_pass2" class="form-control"> <br> 
                 <input type="submit"  value="Send"> <br>
             </div>
         </form>

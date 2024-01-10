@@ -216,12 +216,13 @@
     <a href="{{ url_for('admin_add_grp_flow') }}" >Dodawanie grupy przepływu</a>
     <a href="{{ url_for('admin_add_file') }}">Dodaj nowy dokument</a>
     <a href="{{ url_for('admin_new_flow') }}"> Nowy przepływ</a>
-    <a href="{{ url_for('admin_my_aprove') }}"class="settings">Twoje dokumenty</a>
+    <a href="{{ url_for('workflows') }}" class="settings"> Przepływy prac </a> 
+    <a href="{{ url_for('admin_my_aprove') }}">Twoje dokumenty</a>
     <a href="{{ url_for('admin_bugs') }}">Zgłoszenia użytkowników</a>
     <a href="{{ url_for('users') }}">Zarządzanie użytkownikami</a>
     <a href="{{ url_for('groups') }}">Zarządzanie grupami</a>
     <a href="{{ url_for('admin_self_edit_user') }}">Ustawienia</a>
-  </div>
+</div>
 
 
     <div id="content">
@@ -302,7 +303,7 @@
             </td>
             <td> {{ true_flow.groupname }} </td>
             <td>
-              <a href="{{ url_for('workflows_info', id_flo=true_flow.flow_id) }}" role="button">Więcej informacji</a>
+              <a href="{{ url_for('workflows_info', id_flo=true_flow.flow_id) }}" class="btn btn-primary btn-sm" role="button">Więcej informacji</a>
             </td>
           </tr>
             {%endfor%}
